@@ -6,8 +6,6 @@ import java.io.IOException;
 import java.util.Map;
 import java.util.Set;
 
-import org.apache.hadoop.io.MapWritable;
-import org.apache.hadoop.io.Text;
 import org.apache.hadoop.io.WritableComparable;
 import org.apache.hadoop.io.WritableUtils;
 
@@ -47,7 +45,7 @@ public class GameWritable implements WritableComparable<GameWritable> {
 	 * The home team for this game
 	 */
 	private TeamGameWritable homeTeam;
-	
+
 	/**
 	 * The away team for this game
 	 */
@@ -91,21 +89,22 @@ public class GameWritable implements WritableComparable<GameWritable> {
 		homeTeam = null;
 		awayTeam = null;
 	}
-	
+
 	/**
 	 * Copy constructor
 	 * 
-	 * @param game	The {@link GameWritable} object to copy
+	 * @param game
+	 *            The {@link GameWritable} object to copy
 	 */
-	public GameWritable(GameWritable game){
-		
+	public GameWritable(GameWritable game) {
+
 		this();
-		
-		if(game != null ){
+
+		if (game != null) {
 			this.gameId = new String(game.getGameId());
 			this.year = game.getYear();
 			this.month = game.getMonth();
-			
+
 			try {
 				this.setHomeTeam(new TeamGameWritable(game.getHomeTeam()));
 			} catch (TeamNotFoundException e) {
@@ -146,36 +145,38 @@ public class GameWritable implements WritableComparable<GameWritable> {
 	public int getDay() {
 		return day;
 	}
-	
+
 	/**
-	 * @return true if the {@link GameWritable#homeTeam} scored more points than the {@link GameWritable#awayTeam}, false otherwise
+	 * @return true if the {@link GameWritable#homeTeam} scored more points than
+	 *         the {@link GameWritable#awayTeam}, false otherwise
 	 */
-	public boolean isHomeWinner(){
-		
-		if( homeTeam != null && awayTeam != null ){
-			
+	public boolean isHomeWinner() {
+
+		if (homeTeam != null && awayTeam != null) {
+
 			double homePoints = homeTeam.getPoints();
 			double awayPoints = awayTeam.getPoints();
-			
+
 			return homePoints > awayPoints;
 		}
-		
+
 		return false;
 	}
-	
+
 	/**
-	 * @return true if the {@link GameWritable#awayTeam} scored more points than the {@link GameWritable#homeTeam}, false otherwise
+	 * @return true if the {@link GameWritable#awayTeam} scored more points than
+	 *         the {@link GameWritable#homeTeam}, false otherwise
 	 */
-	public boolean isAwayWinner(){
-		
-		if( homeTeam != null && awayTeam != null ){
-			
+	public boolean isAwayWinner() {
+
+		if (homeTeam != null && awayTeam != null) {
+
 			double homePoints = homeTeam.getPoints();
 			double awayPoints = awayTeam.getPoints();
-			
+
 			return awayPoints > homePoints;
 		}
-		
+
 		return false;
 	}
 
@@ -189,8 +190,8 @@ public class GameWritable implements WritableComparable<GameWritable> {
 	}
 
 	/**
-	 * @return true if {@link GameWritable#awayTeam} is not null,
-	 *         false otherwise
+	 * @return true if {@link GameWritable#awayTeam} is not null, false
+	 *         otherwise
 	 */
 	public boolean hasAwayTeam() {
 		return awayTeam != null;
@@ -264,7 +265,7 @@ public class GameWritable implements WritableComparable<GameWritable> {
 
 		boolean playerAdded = false;
 		String teamId = player.getTeamId();
-		if ( awayTeam != null ) {
+		if (awayTeam != null) {
 
 			if (awayTeam.equals(teamId)) {
 
@@ -288,26 +289,28 @@ public class GameWritable implements WritableComparable<GameWritable> {
 	}
 
 	/**
-	 * Sets the starting Elo value for all players in this game based on the elo value of the players in the map that are passed in
+	 * Sets the starting Elo value for all players in this game based on the elo
+	 * value of the players in the map that are passed in
 	 * 
-	 * @param playerEloMap	A map of playerIds to their {@link PlayerEloWritable}
+	 * @param playerEloMap
+	 *            A map of playerIds to their {@link PlayerEloWritable}
 	 */
-	public void setPlayersStartingElo(Map<String, PlayerEloWritable> playerEloMap){
-		
+	public void setPlayersStartingElo(Map<String, PlayerEloWritable> playerEloMap) {
+
 		Set<String> keys = playerEloMap.keySet();
-		for( String playerId : keys ){
-			
+		for (String playerId : keys) {
+
 			PlayerEloWritable playerElo = playerEloMap.get(playerId);
 			double elo = playerElo.getElo();
-			
-			if(homeTeam != null && homeTeam.hasPlayerId(playerId) ){
+
+			if (homeTeam != null && homeTeam.hasPlayerId(playerId)) {
 				homeTeam.setPlayerStartElo(playerId, elo);
 			}
-			
-			if(awayTeam != null && awayTeam.hasPlayerId(playerId)){
+
+			if (awayTeam != null && awayTeam.hasPlayerId(playerId)) {
 				awayTeam.setPlayerStartElo(playerId, elo);
 			}
-		}			
+		}
 	}
 
 	/**
@@ -323,13 +326,13 @@ public class GameWritable implements WritableComparable<GameWritable> {
 		year = Integer.parseInt(WritableUtils.readString(in));
 		month = Integer.parseInt(WritableUtils.readString(in));
 		day = Integer.parseInt(WritableUtils.readString(in));
-		
-		if(homeTeam == null){
+
+		if (homeTeam == null) {
 			homeTeam = new TeamGameWritable();
 		}
 		homeTeam.readFields(in);
-		
-		if(awayTeam == null){
+
+		if (awayTeam == null) {
 			awayTeam = new TeamGameWritable();
 		}
 		awayTeam.readFields(in);
@@ -347,13 +350,13 @@ public class GameWritable implements WritableComparable<GameWritable> {
 		WritableUtils.writeString(out, Integer.toString(year));
 		WritableUtils.writeString(out, Integer.toString(month));
 		WritableUtils.writeString(out, Integer.toString(day));
-		
-		if(homeTeam == null){
+
+		if (homeTeam == null) {
 			homeTeam = new TeamGameWritable();
 		}
 		homeTeam.write(out);
-		
-		if(awayTeam == null){
+
+		if (awayTeam == null) {
 			awayTeam = new TeamGameWritable();
 		}
 		awayTeam.write(out);

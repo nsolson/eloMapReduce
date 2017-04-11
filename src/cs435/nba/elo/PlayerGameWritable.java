@@ -68,12 +68,12 @@ public class PlayerGameWritable implements WritableComparable<PlayerGameWritable
 	 * Total turnovers by this player
 	 */
 	private double turnovers;
-	
+
 	/**
 	 * The starting Elo value for this player in this game
 	 */
 	private double startElo;
-	
+
 	/**
 	 * The ending Elo value for this player after this game
 	 */
@@ -128,17 +128,18 @@ public class PlayerGameWritable implements WritableComparable<PlayerGameWritable
 		this.startElo = Constants.START_ELO;
 		this.endElo = Constants.START_ELO;
 	}
-	
+
 	/**
 	 * Copy constructor
 	 * 
-	 * @param player The {@link PlayerGameWritable} to copy
+	 * @param player
+	 *            The {@link PlayerGameWritable} to copy
 	 */
-	public PlayerGameWritable(PlayerGameWritable player){
-		
+	public PlayerGameWritable(PlayerGameWritable player) {
+
 		this();
-		
-		if( player != null ){
+
+		if (player != null) {
 			this.teamId = new String(player.getTeamId());
 			this.playerId = new String(player.getPlayerId());
 			this.name = new String(player.getName());
@@ -221,36 +222,38 @@ public class PlayerGameWritable implements WritableComparable<PlayerGameWritable
 	public double getTurnovers() {
 		return turnovers;
 	}
-	
+
 	/**
 	 * @return {@link PlayerGameWritable#startElo}
 	 */
-	public double getStartElo(){
+	public double getStartElo() {
 		return startElo;
 	}
-	
+
 	/**
 	 * @return {@link PlayerGameWritable#endElo}
 	 */
-	public double getEndElo(){
+	public double getEndElo() {
 		return endElo;
 	}
-	
+
 	/**
 	 * Sets the {@link PlayerGameWritable#startElo}
 	 * 
-	 * @param startElo The value to set {@link PlayerGameWritable#startElo} to
+	 * @param startElo
+	 *            The value to set {@link PlayerGameWritable#startElo} to
 	 */
-	public void setStartElo(double startElo){
+	public void setStartElo(double startElo) {
 		this.startElo = startElo;
 	}
-	
+
 	/**
 	 * Sets the {@link PlayerGameWritable#endElo}
 	 * 
-	 * @param endElo The value to set {@link PlayerGameWritable#endElo} to
+	 * @param endElo
+	 *            The value to set {@link PlayerGameWritable#endElo} to
 	 */
-	public void setEndElo(double endElo){
+	public void setEndElo(double endElo) {
 		this.endElo = endElo;
 	}
 

@@ -24,7 +24,7 @@ public class PlayerEloWritable implements WritableComparable<PlayerEloWritable> 
 	 * The ID of this player
 	 */
 	private String playerId;
-	
+
 	/**
 	 * The name of this player
 	 */
@@ -43,12 +43,13 @@ public class PlayerEloWritable implements WritableComparable<PlayerEloWritable> 
 	}
 
 	/**
-	 * Constructs this class with the ID and name of the player and defaults their Elo to
-	 * {@link Constants#START_ELO}
+	 * Constructs this class with the ID and name of the player and defaults
+	 * their Elo to {@link Constants#START_ELO}
 	 * 
 	 * @param playerId
 	 *            The ID of the player
-	 * @param name	The name of the player
+	 * @param name
+	 *            The name of the player
 	 */
 	public PlayerEloWritable(String playerId, String name) {
 		this(playerId, name, Constants.START_ELO);
@@ -59,7 +60,8 @@ public class PlayerEloWritable implements WritableComparable<PlayerEloWritable> 
 	 * 
 	 * @param playerId
 	 *            The ID of the player
-	 * @param name	The name of the player
+	 * @param name
+	 *            The name of the player
 	 * @param elo
 	 *            The Elo value of the player
 	 */
@@ -76,11 +78,11 @@ public class PlayerEloWritable implements WritableComparable<PlayerEloWritable> 
 	public String getPlayerId() {
 		return playerId;
 	}
-	
+
 	/**
 	 * @return {@link PlayerEloWritable#name}
 	 */
-	public String getName(){
+	public String getName() {
 		return name;
 	}
 
@@ -90,12 +92,14 @@ public class PlayerEloWritable implements WritableComparable<PlayerEloWritable> 
 	public double getElo() {
 		return elo;
 	}
-	
+
 	/**
 	 * Sets the elo value for the player
-	 * @param elo the value to set {@link PlayerEloWritable#elo} to
+	 * 
+	 * @param elo
+	 *            the value to set {@link PlayerEloWritable#elo} to
 	 */
-	public void setElo(double elo){
+	public void setElo(double elo) {
 		this.elo = elo;
 	}
 
