@@ -20,6 +20,11 @@ import org.apache.hadoop.io.WritableUtils;
 public class PlayerGameWritable implements WritableComparable<PlayerGameWritable> {
 
 	/**
+	 * The ID of the team the player plays for
+	 */
+	private String teamId;
+
+	/**
 	 * The ID of the player
 	 */
 	private String playerId;
@@ -32,50 +37,52 @@ public class PlayerGameWritable implements WritableComparable<PlayerGameWritable
 	/**
 	 * Total points scored by this player
 	 */
-	private int points;
+	private double points;
 
 	/**
 	 * Total minutes played by this player
 	 */
-	private int minPlayed;
+	private double minPlayed;
 
 	/**
 	 * Total rebounds by this player
 	 */
-	private int rebounds;
+	private double rebounds;
 
 	/**
 	 * Total assists by this player
 	 */
-	private int assists;
+	private double assists;
 
 	/**
 	 * Total steals by this player
 	 */
-	private int steals;
+	private double steals;
 
 	/**
 	 * Total blocks by this player
 	 */
-	private int blocks;
+	private double blocks;
 
 	/**
 	 * Total turnovers by this player
 	 */
-	private int turnovers;
+	private double turnovers;
 
 	/**
 	 * Default constructor, required for Hadoop
 	 */
 	public PlayerGameWritable() {
-		this(Constants.INVALID_ID, Constants.EMPTY_STRING, Constants.INVALID_STAT, Constants.INVALID_STAT,
+		this(Constants.INVALID_ID, Constants.INVALID_ID, Constants.EMPTY_STRING, Constants.INVALID_STAT,
 				Constants.INVALID_STAT, Constants.INVALID_STAT, Constants.INVALID_STAT, Constants.INVALID_STAT,
-				Constants.INVALID_STAT);
+				Constants.INVALID_STAT, Constants.INVALID_STAT);
 	}
 
 	/**
 	 * Constructor that initializes all values
 	 * 
+	 * @param teamId
+	 *            The ID of the team this player plays for
 	 * @param playerId
 	 *            The ID of this player
 	 * @param name
@@ -95,9 +102,10 @@ public class PlayerGameWritable implements WritableComparable<PlayerGameWritable
 	 * @param turnovers
 	 *            Total turnovers by this player
 	 */
-	public PlayerGameWritable(String playerId, String name, int points, int minPlayed, int rebounds, int assists,
-			int steals, int blocks, int turnovers) {
+	public PlayerGameWritable(String teamId, String playerId, String name, double points, double minPlayed,
+			double rebounds, double assists, double steals, double blocks, double turnovers) {
 
+		this.teamId = teamId;
 		this.playerId = playerId;
 		this.name = name;
 		this.points = points;
@@ -107,6 +115,13 @@ public class PlayerGameWritable implements WritableComparable<PlayerGameWritable
 		this.steals = steals;
 		this.blocks = blocks;
 		this.turnovers = turnovers;
+	}
+
+	/**
+	 * @return {@link PlayerGameWritable#teamId}
+	 */
+	public String getTeamId() {
+		return teamId;
 	}
 
 	/**
@@ -126,49 +141,49 @@ public class PlayerGameWritable implements WritableComparable<PlayerGameWritable
 	/**
 	 * @return {@link PlayerGameWritable#points}
 	 */
-	public int getPoints() {
+	public double getPoints() {
 		return points;
 	}
 
 	/**
 	 * @return {@link PlayerGameWritable#minPlayed}
 	 */
-	public int getMinPlayed() {
+	public double getMinPlayed() {
 		return minPlayed;
 	}
 
 	/**
 	 * @return {@link PlayerGameWritable#rebounds}
 	 */
-	public int getRebounds() {
+	public double getRebounds() {
 		return rebounds;
 	}
 
 	/**
 	 * @return {@link PlayerGameWritable#assists}
 	 */
-	public int getAssists() {
+	public double getAssists() {
 		return assists;
 	}
 
 	/**
 	 * @return {@link PlayerGameWritable#steals}
 	 */
-	public int getSteals() {
+	public double getSteals() {
 		return steals;
 	}
 
 	/**
 	 * @return {@link PlayerGameWritable#blocks}
 	 */
-	public int getBlocks() {
+	public double getBlocks() {
 		return blocks;
 	}
 
 	/**
 	 * @return {@link PlayerGameWritable#turnovers}
 	 */
-	public int getTurnovers() {
+	public double getTurnovers() {
 		return turnovers;
 	}
 
@@ -181,15 +196,16 @@ public class PlayerGameWritable implements WritableComparable<PlayerGameWritable
 	@Override
 	public void readFields(DataInput in) throws IOException {
 
+		teamId = WritableUtils.readString(in);
 		playerId = WritableUtils.readString(in);
 		name = WritableUtils.readString(in);
-		points = Integer.parseInt(WritableUtils.readString(in));
-		minPlayed = Integer.parseInt(WritableUtils.readString(in));
-		rebounds = Integer.parseInt(WritableUtils.readString(in));
-		assists = Integer.parseInt(WritableUtils.readString(in));
-		steals = Integer.parseInt(WritableUtils.readString(in));
-		blocks = Integer.parseInt(WritableUtils.readString(in));
-		turnovers = Integer.parseInt(WritableUtils.readString(in));
+		points = Double.parseDouble(WritableUtils.readString(in));
+		minPlayed = Double.parseDouble(WritableUtils.readString(in));
+		rebounds = Double.parseDouble(WritableUtils.readString(in));
+		assists = Double.parseDouble(WritableUtils.readString(in));
+		steals = Double.parseDouble(WritableUtils.readString(in));
+		blocks = Double.parseDouble(WritableUtils.readString(in));
+		turnovers = Double.parseDouble(WritableUtils.readString(in));
 	}
 
 	/**
@@ -201,15 +217,16 @@ public class PlayerGameWritable implements WritableComparable<PlayerGameWritable
 	@Override
 	public void write(DataOutput out) throws IOException {
 
+		WritableUtils.writeString(out, teamId);
 		WritableUtils.writeString(out, playerId);
 		WritableUtils.writeString(out, name);
-		WritableUtils.writeString(out, Integer.toString(points));
-		WritableUtils.writeString(out, Integer.toString(minPlayed));
-		WritableUtils.writeString(out, Integer.toString(rebounds));
-		WritableUtils.writeString(out, Integer.toString(assists));
-		WritableUtils.writeString(out, Integer.toString(steals));
-		WritableUtils.writeString(out, Integer.toString(blocks));
-		WritableUtils.writeString(out, Integer.toString(turnovers));
+		WritableUtils.writeString(out, Double.toString(points));
+		WritableUtils.writeString(out, Double.toString(minPlayed));
+		WritableUtils.writeString(out, Double.toString(rebounds));
+		WritableUtils.writeString(out, Double.toString(assists));
+		WritableUtils.writeString(out, Double.toString(steals));
+		WritableUtils.writeString(out, Double.toString(blocks));
+		WritableUtils.writeString(out, Double.toString(turnovers));
 	}
 
 	/**

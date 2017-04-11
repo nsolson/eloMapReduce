@@ -22,14 +22,14 @@ import org.apache.hadoop.io.WritableUtils;
 public class GameWritable implements WritableComparable<GameWritable> {
 
 	/**
-	 * The static final reference for the 'home' team
+	 * ID representing the home team
 	 */
-	private static final Text HOME_TEAM = new Text("Home");
+	private static final Text HOME_TEAM = new Text("HOME");
 
 	/**
-	 * The static final reference for the 'away' team
+	 * ID representing the away team
 	 */
-	private static final Text AWAY_TEAM = new Text("Away");
+	private static final Text AWAY_TEAM = new Text("AWAY");
 
 	/**
 	 * The ID of the game
@@ -62,6 +62,16 @@ public class GameWritable implements WritableComparable<GameWritable> {
 	public GameWritable() {
 		// Call actual constructor with known invalid parameters
 		this(Constants.INVALID_ID, Constants.INVALID_DATE, Constants.INVALID_DATE, Constants.INVALID_DATE);
+	}
+
+	/**
+	 * For the player file case, we only know the gameID
+	 * 
+	 * @param gameId
+	 *            The ID of the game
+	 */
+	public GameWritable(String gameId) {
+		this(gameId, Constants.INVALID_DATE, Constants.INVALID_DATE, Constants.INVALID_DATE);
 	}
 
 	/**
@@ -113,19 +123,48 @@ public class GameWritable implements WritableComparable<GameWritable> {
 	}
 
 	/**
-	 * @return The home team from {@link GameWritable#teams}
+	 * @return true if there is a home team in {@link GameWritable#teams}, false
+	 *         otherwise
 	 */
-	public TeamGameWritable getHomeTeam() {
+	public boolean hasHomeTeam() {
 
-		return (TeamGameWritable) teams.get(HOME_TEAM);
+		return teams.containsKey(HOME_TEAM);
+	}
+
+	/**
+	 * @return true if there is an away team in {@link GameWritable#teams},
+	 *         false otherwise
+	 */
+	public boolean hasAwayTeam() {
+		return teams.containsKey(AWAY_TEAM);
+	}
+
+	/**
+	 * @return The home team from {@link GameWritable#teams}
+	 * @throws TeamNotFoundException
+	 *             if there is no home team set for this game
+	 */
+	public TeamGameWritable getHomeTeam() throws TeamNotFoundException {
+
+		if (teams.containsKey(HOME_TEAM)) {
+			return (TeamGameWritable) teams.get(HOME_TEAM);
+		} else {
+			throw new TeamNotFoundException("Game: " + gameId + " does not have a home team");
+		}
 	}
 
 	/**
 	 * @return The away team from {@link GameWritable#teams}
+	 * @throws TeamNotFoundException
+	 *             if there is no away team set for this game
 	 */
-	public TeamGameWritable getAwayTeam() {
+	public TeamGameWritable getAwayTeam() throws TeamNotFoundException {
 
-		return (TeamGameWritable) teams.get(AWAY_TEAM);
+		if (teams.containsKey(AWAY_TEAM)) {
+			return (TeamGameWritable) teams.get(AWAY_TEAM);
+		} else {
+			throw new TeamNotFoundException("Game: " + gameId + " does not have an away team");
+		}
 	}
 
 	/**
@@ -159,6 +198,51 @@ public class GameWritable implements WritableComparable<GameWritable> {
 
 		teams.put(AWAY_TEAM, awayTeam);
 	}
+
+	/**
+	 * Adds the given player to the correct team
+	 * 
+	 * @param player
+	 *            The {@link PlayerGameWritable} to add
+	 * @throws TeamNotFoundException
+	 *             If the player team is not a part of this game
+	 */
+	public void addPlayer(PlayerGameWritable player) throws TeamNotFoundException {
+
+		if (player == null) {
+			return;
+		}
+
+		boolean playerAdded = false;
+		String teamId = player.getTeamId();
+		if (teams.containsKey(AWAY_TEAM)) {
+
+			TeamGameWritable awayTeam = (TeamGameWritable) teams.get(AWAY_TEAM);
+			if (awayTeam.equals(teamId)) {
+
+				awayTeam.addPlayer(player);
+				playerAdded = true;
+			}
+		}
+
+		if (teams.containsKey(HOME_TEAM)) {
+
+			TeamGameWritable homeTeam = (TeamGameWritable) teams.get(HOME_TEAM);
+			if (homeTeam.equals(teamId)) {
+
+				homeTeam.addPlayer(player);
+				playerAdded = true;
+			}
+		}
+
+		if (!playerAdded) {
+			throw new TeamNotFoundException("Could not find teamId: " + teamId + "in game: " + gameId);
+		}
+	}
+
+	/**
+	 * 
+	 */
 
 	/**
 	 * Reads fields from HDFS into this class

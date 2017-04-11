@@ -29,37 +29,37 @@ public class TeamGameWritable implements WritableComparable<TeamGameWritable> {
 	/**
 	 * Total points scored by the team
 	 */
-	private int points;
+	private double points;
 
 	/**
 	 * Total minutes played by the team
 	 */
-	private int minPlayed;
+	private double minPlayed;
 
 	/**
 	 * Total rebounds by the team
 	 */
-	private int rebounds;
+	private double rebounds;
 
 	/**
 	 * Total assists by the team
 	 */
-	private int assists;
+	private double assists;
 
 	/**
 	 * Total steals by the team
 	 */
-	private int steals;
+	private double steals;
 
 	/**
 	 * Total blocks by the team
 	 */
-	private int blocks;
+	private double blocks;
 
 	/**
 	 * Total turnovers by the team
 	 */
-	private int turnovers;
+	private double turnovers;
 
 	/**
 	 * A {@link MapWritable} for all the players on this team for this game. Has
@@ -73,6 +73,18 @@ public class TeamGameWritable implements WritableComparable<TeamGameWritable> {
 	public TeamGameWritable() {
 		this(Constants.INVALID_ID, Constants.INVALID_STAT, Constants.INVALID_STAT, Constants.INVALID_STAT,
 				Constants.INVALID_STAT, Constants.INVALID_STAT, Constants.INVALID_STAT, Constants.INVALID_STAT);
+	}
+
+	/**
+	 * Constructor for the case of setting up players. We don't know overall
+	 * values, we just know teamID
+	 * 
+	 * @param teamId
+	 *            The ID of this team
+	 */
+	public TeamGameWritable(String teamId) {
+		this(teamId, Constants.INVALID_STAT, Constants.INVALID_STAT, Constants.INVALID_STAT, Constants.INVALID_STAT,
+				Constants.INVALID_STAT, Constants.INVALID_STAT, Constants.INVALID_STAT);
 	}
 
 	/**
@@ -95,8 +107,8 @@ public class TeamGameWritable implements WritableComparable<TeamGameWritable> {
 	 * @param turnovers
 	 *            Total turnovers by the team
 	 */
-	public TeamGameWritable(String teamId, int points, int minPlayed, int rebounds, int assists, int steals, int blocks,
-			int turnovers) {
+	public TeamGameWritable(String teamId, double points, double minPlayed, double rebounds, double assists,
+			double steals, double blocks, double turnovers) {
 
 		this.teamId = teamId;
 		this.points = points;
@@ -119,49 +131,49 @@ public class TeamGameWritable implements WritableComparable<TeamGameWritable> {
 	/**
 	 * @return {@link TeamGameWritable#points}
 	 */
-	public int getPoints() {
+	public double getPoints() {
 		return points;
 	}
 
 	/**
 	 * @return {@link TeamGameWritable#minPlayed}
 	 */
-	public int getMinPlayed() {
+	public double getMinPlayed() {
 		return minPlayed;
 	}
 
 	/**
 	 * @return {@link TeamGameWritable#rebounds}
 	 */
-	public int getRebounds() {
+	public double getRebounds() {
 		return rebounds;
 	}
 
 	/**
 	 * @return {@link TeamGameWritable#assists}
 	 */
-	public int getAssists() {
+	public double getAssists() {
 		return assists;
 	}
 
 	/**
 	 * @return {@link TeamGameWritable#steals}
 	 */
-	public int getSteals() {
+	public double getSteals() {
 		return steals;
 	}
 
 	/**
 	 * @return {@link TeamGameWritable#blocks}
 	 */
-	public int getBlocks() {
+	public double getBlocks() {
 		return blocks;
 	}
 
 	/**
 	 * @return {@link TeamGameWritable#turnovers}
 	 */
-	public int getTurnovers() {
+	public double getTurnovers() {
 		return turnovers;
 	}
 
@@ -274,13 +286,13 @@ public class TeamGameWritable implements WritableComparable<TeamGameWritable> {
 	public void readFields(DataInput in) throws IOException {
 
 		teamId = WritableUtils.readString(in);
-		points = Integer.parseInt(WritableUtils.readString(in));
-		minPlayed = Integer.parseInt(WritableUtils.readString(in));
-		rebounds = Integer.parseInt(WritableUtils.readString(in));
-		assists = Integer.parseInt(WritableUtils.readString(in));
-		steals = Integer.parseInt(WritableUtils.readString(in));
-		blocks = Integer.parseInt(WritableUtils.readString(in));
-		turnovers = Integer.parseInt(WritableUtils.readString(in));
+		points = Double.parseDouble(WritableUtils.readString(in));
+		minPlayed = Double.parseDouble(WritableUtils.readString(in));
+		rebounds = Double.parseDouble(WritableUtils.readString(in));
+		assists = Double.parseDouble(WritableUtils.readString(in));
+		steals = Double.parseDouble(WritableUtils.readString(in));
+		blocks = Double.parseDouble(WritableUtils.readString(in));
+		turnovers = Double.parseDouble(WritableUtils.readString(in));
 		players.readFields(in);
 	}
 
@@ -294,13 +306,13 @@ public class TeamGameWritable implements WritableComparable<TeamGameWritable> {
 	public void write(DataOutput out) throws IOException {
 
 		WritableUtils.writeString(out, teamId);
-		WritableUtils.writeString(out, Integer.toString(points));
-		WritableUtils.writeString(out, Integer.toString(minPlayed));
-		WritableUtils.writeString(out, Integer.toString(rebounds));
-		WritableUtils.writeString(out, Integer.toString(assists));
-		WritableUtils.writeString(out, Integer.toString(steals));
-		WritableUtils.writeString(out, Integer.toString(blocks));
-		WritableUtils.writeString(out, Integer.toString(turnovers));
+		WritableUtils.writeString(out, Double.toString(points));
+		WritableUtils.writeString(out, Double.toString(minPlayed));
+		WritableUtils.writeString(out, Double.toString(rebounds));
+		WritableUtils.writeString(out, Double.toString(assists));
+		WritableUtils.writeString(out, Double.toString(steals));
+		WritableUtils.writeString(out, Double.toString(blocks));
+		WritableUtils.writeString(out, Double.toString(turnovers));
 		players.write(out);
 	}
 
