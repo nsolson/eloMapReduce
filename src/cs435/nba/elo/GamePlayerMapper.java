@@ -72,6 +72,9 @@ public class GamePlayerMapper extends Mapper<LongWritable, Text, IntWritable, Ga
 			TeamGameWritable homeTeam = new TeamGameWritable(homeTeamId, homePoints, homeMinPlayed, homeRebounds,
 					homeAssists, homeSteals, homeBlocks, homeTurnovers);
 
+			game.setAwayTeam(awayTeam);
+			game.setHomeTeam(homeTeam);
+
 		} else if (vals.length == 11) {
 			// The second file is the player file, it has columns of
 			// 0. gameId
