@@ -3,9 +3,11 @@ package cs435.nba.elo;
 import java.io.DataInput;
 import java.io.DataOutput;
 import java.io.IOException;
+import java.util.Set;
 
 import org.apache.hadoop.io.MapWritable;
 import org.apache.hadoop.io.Text;
+import org.apache.hadoop.io.Writable;
 import org.apache.hadoop.io.WritableComparable;
 import org.apache.hadoop.io.WritableUtils;
 
@@ -120,6 +122,33 @@ public class TeamGameWritable implements WritableComparable<TeamGameWritable> {
 		this.turnovers = turnovers;
 		this.players = new MapWritable();
 	}
+	
+	/**
+	 * Copy constructor
+	 * 
+	 * @param team The {@link TeamGameWritable} object to copy
+	 */
+	public TeamGameWritable(TeamGameWritable team){
+		
+		this();
+		
+		if( team != null ){
+			this.teamId = new String(team.getTeamId());
+			this.points = team.getPoints();
+			this.minPlayed = team.getMinPlayed();
+			this.rebounds = team.getRebounds();
+			this.assists = team.getAssists();
+			this.steals = team.getSteals();
+			this.blocks = team.getBlocks();
+			this.turnovers = team.getTurnovers();
+			
+			MapWritable teamPlayers = team.getPlayers();
+			Set<Writable> keys = teamPlayers.keySet();
+			for( Writable key : keys ){ 
+				this.addPlayer(new PlayerGameWritable((PlayerGameWritable)teamPlayers.get(key)));
+			}
+		}
+	}
 
 	/**
 	 * @return {@link TeamGameWritable#teamId}
@@ -184,6 +213,101 @@ public class TeamGameWritable implements WritableComparable<TeamGameWritable> {
 	public MapWritable getPlayers() {
 		return players;
 	}
+	
+	/**
+	 * Returns the average of the starting Elo values for all players on this team
+	 * 
+	 * @return The average Elo value of all the players at the start of this game for this team 
+	 */
+	public double getStartElo(){
+		
+		double sum = 0;
+		Set<Writable> keys = players.keySet();
+		for( Writable playerId : keys ){
+			sum += ((PlayerGameWritable)players.get(playerId)).getStartElo();
+		}
+		
+		if( keys.size() != 0 ){
+			return sum / keys.size();
+		}else{
+			return 0;
+		}
+	}
+	
+	/**
+	 * Returns the average of the Elo values for all players on this team after this game completes
+	 * 
+	 * @return The average Elo value of all the players after this game finishes for this team
+	 */
+	public double getEndElo(){
+		
+		double sum = 0;;
+		Set<Writable> keys = players.keySet();
+		for(Writable playerId : keys ){
+			sum += ((PlayerGameWritable)players.get(playerId)).getEndElo();
+		}
+		
+		if( keys.size() != 0 ){
+			return sum / keys.size();
+		}else{
+			return 0;
+		}
+	}
+	
+	/**
+	 * Modifies the Elo value for all of the players on this team. Right now, it simply divides the 
+	 * gain or loss equally among all players.
+	 * 
+	 * TODO Modify this to divide Elo based on stats. Will need a check for positive or negative to invert who points are taken from
+	 * 
+	 * @param eloChange	The change in Elo value for the entire team
+	 */
+	public void changeElo(double eloChange){
+		
+		Set<Writable> keys = players.keySet();
+		if( keys.size() != 0 ){
+			
+			double eloChangeForPlayer = eloChange / keys.size();
+			for( Writable playerId : keys){
+				PlayerGameWritable player = (PlayerGameWritable)players.get(playerId);
+				double startElo = player.getStartElo();
+				player.setEndElo(startElo + eloChangeForPlayer);
+			}
+		}
+	}
+	
+	/**
+	 * Sets the given playerId's starting Elo to the given startElo
+	 * 
+	 * @param playerId The playerId to set the starting elo for
+	 * @param startElo The starting elo to set
+	 */
+	public void setPlayerStartElo(String playerId, double startElo){
+		
+		if( playerId == null ){
+			return;
+		}
+		
+		setPlayerStartElo(new Text(playerId), startElo);
+	}
+	
+	/**
+	 * Sets the given playerId's starting Elo to the given startElo
+	 * 
+	 * @param playerId The playerId to set the starting elo for
+	 * @param startElo The starting elo to set
+	 */
+	public void setPlayerStartElo(Text playerId, double startElo){
+		
+		if( playerId == null ){
+			return;
+		}
+		
+		if( players.containsKey(playerId) ){
+			((PlayerGameWritable)players.get(playerId)).setStartElo(startElo);
+		}
+	}
+	
 
 	/**
 	 * @param playerId

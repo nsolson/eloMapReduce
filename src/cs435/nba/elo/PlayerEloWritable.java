@@ -24,41 +24,49 @@ public class PlayerEloWritable implements WritableComparable<PlayerEloWritable> 
 	 * The ID of this player
 	 */
 	private String playerId;
+	
+	/**
+	 * The name of this player
+	 */
+	private String name;
 
 	/**
 	 * The elo value of this player
 	 */
-	private int elo;
+	private double elo;
 
 	/**
 	 * Default constructor, required by Hadoop
 	 */
 	public PlayerEloWritable() {
-		this(Constants.INVALID_ID);
+		this(Constants.INVALID_ID, Constants.EMPTY_STRING);
 	}
 
 	/**
-	 * Constructs this class with the ID and defaults their Elo to
+	 * Constructs this class with the ID and name of the player and defaults their Elo to
 	 * {@link Constants#START_ELO}
 	 * 
 	 * @param playerId
 	 *            The ID of the player
+	 * @param name	The name of the player
 	 */
-	public PlayerEloWritable(String playerId) {
-		this(playerId, Constants.START_ELO);
+	public PlayerEloWritable(String playerId, String name) {
+		this(playerId, name, Constants.START_ELO);
 	}
 
 	/**
-	 * Constructs this class with the ID and the given Elo value
+	 * Constructs this class with the ID, name and the given Elo value
 	 * 
 	 * @param playerId
 	 *            The ID of the player
+	 * @param name	The name of the player
 	 * @param elo
 	 *            The Elo value of the player
 	 */
-	public PlayerEloWritable(String playerId, int elo) {
+	public PlayerEloWritable(String playerId, String name, double elo) {
 
 		this.playerId = playerId;
+		this.name = name;
 		this.elo = elo;
 	}
 
@@ -68,12 +76,27 @@ public class PlayerEloWritable implements WritableComparable<PlayerEloWritable> 
 	public String getPlayerId() {
 		return playerId;
 	}
+	
+	/**
+	 * @return {@link PlayerEloWritable#name}
+	 */
+	public String getName(){
+		return name;
+	}
 
 	/**
 	 * @return {@link PlayerEloWritable#elo}
 	 */
-	public int getElo() {
+	public double getElo() {
 		return elo;
+	}
+	
+	/**
+	 * Sets the elo value for the player
+	 * @param elo the value to set {@link PlayerEloWritable#elo} to
+	 */
+	public void setElo(double elo){
+		this.elo = elo;
 	}
 
 	/**
@@ -86,7 +109,7 @@ public class PlayerEloWritable implements WritableComparable<PlayerEloWritable> 
 	public void readFields(DataInput in) throws IOException {
 
 		playerId = WritableUtils.readString(in);
-		elo = Integer.parseInt(WritableUtils.readString(in));
+		elo = Double.parseDouble(WritableUtils.readString(in));
 	}
 
 	/**
@@ -99,7 +122,7 @@ public class PlayerEloWritable implements WritableComparable<PlayerEloWritable> 
 	public void write(DataOutput out) throws IOException {
 
 		WritableUtils.writeString(out, playerId);
-		WritableUtils.writeString(out, Integer.toString(elo));
+		WritableUtils.writeString(out, Double.toString(elo));
 	}
 
 	/**

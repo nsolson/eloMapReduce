@@ -2,11 +2,12 @@ package cs435.nba.elo;
 
 import java.io.IOException;
 
+import org.apache.hadoop.io.IntWritable;
 import org.apache.hadoop.io.LongWritable;
 import org.apache.hadoop.io.Text;
 import org.apache.hadoop.mapreduce.Mapper;
 
-public class GameMapper extends Mapper<LongWritable, Text, Text, GameWritable> {
+public class GameEloMapper extends Mapper<LongWritable, Text, IntWritable, GameWritable> {
 
 	@Override
 	public void map(LongWritable key, Text value, Context context) throws IOException, InterruptedException {
@@ -104,6 +105,7 @@ public class GameMapper extends Mapper<LongWritable, Text, Text, GameWritable> {
 			index += offset;
 		}
 
-		context.write(new Text("key"), game);
+		// TODO change this to write to different K values
+		context.write(new IntWritable(Constants.TEST_K_FACTOR), game);
 	}
 }

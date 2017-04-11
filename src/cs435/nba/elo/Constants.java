@@ -34,6 +34,11 @@ public class Constants {
 	 * The starting Elo value
 	 */
 	public static final int START_ELO = 1200;
+	
+	/**
+	 * A single K-Factor to test with
+	 */
+	public static final int TEST_K_FACTOR = 16;
 
 	/**
 	 * The minimum K-Factor to test

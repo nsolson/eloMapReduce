@@ -3,6 +3,8 @@ package cs435.nba.elo;
 import java.io.DataInput;
 import java.io.DataOutput;
 import java.io.IOException;
+import java.util.Map;
+import java.util.Set;
 
 import org.apache.hadoop.io.MapWritable;
 import org.apache.hadoop.io.Text;
@@ -20,16 +22,6 @@ import org.apache.hadoop.io.WritableUtils;
  *
  */
 public class GameWritable implements WritableComparable<GameWritable> {
-
-	/**
-	 * ID representing the home team
-	 */
-	private static final Text HOME_TEAM = new Text("HOME");
-
-	/**
-	 * ID representing the away team
-	 */
-	private static final Text AWAY_TEAM = new Text("AWAY");
 
 	/**
 	 * The ID of the game
@@ -52,9 +44,14 @@ public class GameWritable implements WritableComparable<GameWritable> {
 	private int day;
 
 	/**
-	 * A {@link MapWritable} to keep our teams
+	 * The home team for this game
 	 */
-	private MapWritable teams;
+	private TeamGameWritable homeTeam;
+	
+	/**
+	 * The away team for this game
+	 */
+	private TeamGameWritable awayTeam;
 
 	/**
 	 * Default constructor, necessary for Hadoop
@@ -91,7 +88,35 @@ public class GameWritable implements WritableComparable<GameWritable> {
 		this.year = year;
 		this.month = month;
 		this.day = day;
-		teams = new MapWritable();
+		homeTeam = null;
+		awayTeam = null;
+	}
+	
+	/**
+	 * Copy constructor
+	 * 
+	 * @param game	The {@link GameWritable} object to copy
+	 */
+	public GameWritable(GameWritable game){
+		
+		this();
+		
+		if(game != null ){
+			this.gameId = new String(game.getGameId());
+			this.year = game.getYear();
+			this.month = game.getMonth();
+			
+			try {
+				this.setHomeTeam(new TeamGameWritable(game.getHomeTeam()));
+			} catch (TeamNotFoundException e) {
+				e.printStackTrace();
+			}
+			try {
+				this.setAwayTeam(new TeamGameWritable(game.getAwayTeam()));
+			} catch (TeamNotFoundException e) {
+				e.printStackTrace();
+			}
+		}
 	}
 
 	/**
@@ -121,22 +146,54 @@ public class GameWritable implements WritableComparable<GameWritable> {
 	public int getDay() {
 		return day;
 	}
+	
+	/**
+	 * @return true if the {@link GameWritable#homeTeam} scored more points than the {@link GameWritable#awayTeam}, false otherwise
+	 */
+	public boolean isHomeWinner(){
+		
+		if( homeTeam != null && awayTeam != null ){
+			
+			double homePoints = homeTeam.getPoints();
+			double awayPoints = awayTeam.getPoints();
+			
+			return homePoints > awayPoints;
+		}
+		
+		return false;
+	}
+	
+	/**
+	 * @return true if the {@link GameWritable#awayTeam} scored more points than the {@link GameWritable#homeTeam}, false otherwise
+	 */
+	public boolean isAwayWinner(){
+		
+		if( homeTeam != null && awayTeam != null ){
+			
+			double homePoints = homeTeam.getPoints();
+			double awayPoints = awayTeam.getPoints();
+			
+			return awayPoints > homePoints;
+		}
+		
+		return false;
+	}
 
 	/**
-	 * @return true if there is a home team in {@link GameWritable#teams}, false
+	 * @return true if {@link GameWritable#homeTeam} is not null, false
 	 *         otherwise
 	 */
 	public boolean hasHomeTeam() {
 
-		return teams.containsKey(HOME_TEAM);
+		return homeTeam != null;
 	}
 
 	/**
-	 * @return true if there is an away team in {@link GameWritable#teams},
+	 * @return true if {@link GameWritable#awayTeam} is not null,
 	 *         false otherwise
 	 */
 	public boolean hasAwayTeam() {
-		return teams.containsKey(AWAY_TEAM);
+		return awayTeam != null;
 	}
 
 	/**
@@ -146,8 +203,8 @@ public class GameWritable implements WritableComparable<GameWritable> {
 	 */
 	public TeamGameWritable getHomeTeam() throws TeamNotFoundException {
 
-		if (teams.containsKey(HOME_TEAM)) {
-			return (TeamGameWritable) teams.get(HOME_TEAM);
+		if (homeTeam != null) {
+			return homeTeam;
 		} else {
 			throw new TeamNotFoundException("Game: " + gameId + " does not have a home team");
 		}
@@ -160,8 +217,8 @@ public class GameWritable implements WritableComparable<GameWritable> {
 	 */
 	public TeamGameWritable getAwayTeam() throws TeamNotFoundException {
 
-		if (teams.containsKey(AWAY_TEAM)) {
-			return (TeamGameWritable) teams.get(AWAY_TEAM);
+		if (awayTeam != null) {
+			return awayTeam;
 		} else {
 			throw new TeamNotFoundException("Game: " + gameId + " does not have an away team");
 		}
@@ -176,11 +233,7 @@ public class GameWritable implements WritableComparable<GameWritable> {
 	 */
 	public void setHomeTeam(TeamGameWritable homeTeam) {
 
-		if (teams.containsKey(HOME_TEAM)) {
-			teams.remove(HOME_TEAM);
-		}
-
-		teams.put(HOME_TEAM, homeTeam);
+		this.homeTeam = homeTeam;
 	}
 
 	/**
@@ -192,11 +245,7 @@ public class GameWritable implements WritableComparable<GameWritable> {
 	 */
 	public void setAwayTeam(TeamGameWritable awayTeam) {
 
-		if (teams.containsKey(AWAY_TEAM)) {
-			teams.remove(AWAY_TEAM);
-		}
-
-		teams.put(AWAY_TEAM, awayTeam);
+		this.awayTeam = awayTeam;
 	}
 
 	/**
@@ -215,9 +264,8 @@ public class GameWritable implements WritableComparable<GameWritable> {
 
 		boolean playerAdded = false;
 		String teamId = player.getTeamId();
-		if (teams.containsKey(AWAY_TEAM)) {
+		if ( awayTeam != null ) {
 
-			TeamGameWritable awayTeam = (TeamGameWritable) teams.get(AWAY_TEAM);
 			if (awayTeam.equals(teamId)) {
 
 				awayTeam.addPlayer(player);
@@ -225,9 +273,8 @@ public class GameWritable implements WritableComparable<GameWritable> {
 			}
 		}
 
-		if (teams.containsKey(HOME_TEAM)) {
+		if (homeTeam != null) {
 
-			TeamGameWritable homeTeam = (TeamGameWritable) teams.get(HOME_TEAM);
 			if (homeTeam.equals(teamId)) {
 
 				homeTeam.addPlayer(player);
@@ -241,8 +288,27 @@ public class GameWritable implements WritableComparable<GameWritable> {
 	}
 
 	/**
+	 * Sets the starting Elo value for all players in this game based on the elo value of the players in the map that are passed in
 	 * 
+	 * @param playerEloMap	A map of playerIds to their {@link PlayerEloWritable}
 	 */
+	public void setPlayersStartingElo(Map<String, PlayerEloWritable> playerEloMap){
+		
+		Set<String> keys = playerEloMap.keySet();
+		for( String playerId : keys ){
+			
+			PlayerEloWritable playerElo = playerEloMap.get(playerId);
+			double elo = playerElo.getElo();
+			
+			if(homeTeam != null && homeTeam.hasPlayerId(playerId) ){
+				homeTeam.setPlayerStartElo(playerId, elo);
+			}
+			
+			if(awayTeam != null && awayTeam.hasPlayerId(playerId)){
+				awayTeam.setPlayerStartElo(playerId, elo);
+			}
+		}			
+	}
 
 	/**
 	 * Reads fields from HDFS into this class
@@ -257,7 +323,16 @@ public class GameWritable implements WritableComparable<GameWritable> {
 		year = Integer.parseInt(WritableUtils.readString(in));
 		month = Integer.parseInt(WritableUtils.readString(in));
 		day = Integer.parseInt(WritableUtils.readString(in));
-		teams.readFields(in);
+		
+		if(homeTeam == null){
+			homeTeam = new TeamGameWritable();
+		}
+		homeTeam.readFields(in);
+		
+		if(awayTeam == null){
+			awayTeam = new TeamGameWritable();
+		}
+		awayTeam.readFields(in);
 	}
 
 	/**
@@ -272,7 +347,16 @@ public class GameWritable implements WritableComparable<GameWritable> {
 		WritableUtils.writeString(out, Integer.toString(year));
 		WritableUtils.writeString(out, Integer.toString(month));
 		WritableUtils.writeString(out, Integer.toString(day));
-		teams.write(out);
+		
+		if(homeTeam == null){
+			homeTeam = new TeamGameWritable();
+		}
+		homeTeam.write(out);
+		
+		if(awayTeam == null){
+			awayTeam = new TeamGameWritable();
+		}
+		awayTeam.write(out);
 	}
 
 	/**
