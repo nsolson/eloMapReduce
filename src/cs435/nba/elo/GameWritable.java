@@ -3,8 +3,6 @@ package cs435.nba.elo;
 import java.io.DataInput;
 import java.io.DataOutput;
 import java.io.IOException;
-import java.util.Map;
-import java.util.Set;
 
 import org.apache.hadoop.io.WritableComparable;
 import org.apache.hadoop.io.WritableUtils;
@@ -198,9 +196,9 @@ public class GameWritable implements WritableComparable<GameWritable> {
 	}
 
 	/**
-	 * @return The home team from {@link GameWritable#teams}
+	 * @return {@link GameWritable#homeTeam}
 	 * @throws TeamNotFoundException
-	 *             if there is no home team set for this game
+	 *             If {@link GameWritable#homeTeam} is null
 	 */
 	public TeamGameWritable getHomeTeam() throws TeamNotFoundException {
 
@@ -212,9 +210,9 @@ public class GameWritable implements WritableComparable<GameWritable> {
 	}
 
 	/**
-	 * @return The away team from {@link GameWritable#teams}
+	 * @return {@link GameWritable#awayTeam}
 	 * @throws TeamNotFoundException
-	 *             if there is no away team set for this game
+	 *             If {@link GameWritable#awayTeam} is null
 	 */
 	public TeamGameWritable getAwayTeam() throws TeamNotFoundException {
 
@@ -226,7 +224,7 @@ public class GameWritable implements WritableComparable<GameWritable> {
 	}
 
 	/**
-	 * Sets the home team for {@link GameWritable#teams}
+	 * Sets {@link GameWritable#homeTeam}
 	 * 
 	 * @param homeTeam
 	 *            The {@link TeamGameWritable} representing the home team for
@@ -238,7 +236,7 @@ public class GameWritable implements WritableComparable<GameWritable> {
 	}
 
 	/**
-	 * Sets the away team for {@link GameWritable#teams}
+	 * Sets {@link GameWritable#awayTeam}
 	 * 
 	 * @param awayTeam
 	 *            The {@link TeamGameWritable} representing the away team for
@@ -285,31 +283,6 @@ public class GameWritable implements WritableComparable<GameWritable> {
 
 		if (!playerAdded) {
 			throw new TeamNotFoundException("Could not find teamId: " + teamId + "in game: " + gameId);
-		}
-	}
-
-	/**
-	 * Sets the starting Elo value for all players in this game based on the elo
-	 * value of the players in the map that are passed in
-	 * 
-	 * @param playerEloMap
-	 *            A map of playerIds to their {@link PlayerEloWritable}
-	 */
-	public void setPlayersStartingElo(Map<String, PlayerEloWritable> playerEloMap) {
-
-		Set<String> keys = playerEloMap.keySet();
-		for (String playerId : keys) {
-
-			PlayerEloWritable playerElo = playerEloMap.get(playerId);
-			double elo = playerElo.getElo();
-
-			if (homeTeam != null && homeTeam.hasPlayerId(playerId)) {
-				homeTeam.setPlayerStartElo(playerId, elo);
-			}
-
-			if (awayTeam != null && awayTeam.hasPlayerId(playerId)) {
-				awayTeam.setPlayerStartElo(playerId, elo);
-			}
 		}
 	}
 

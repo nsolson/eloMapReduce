@@ -67,8 +67,10 @@ public class Main {
 		Job jobTwo = Job.getInstance(confTwo);
 		jobTwo.setJarByClass(Main.class);
 		jobTwo.setMapperClass(GameEloMapper.class);
+		jobTwo.setPartitionerClass(KFactorPartitioner.class);
+		jobTwo.setGroupingComparatorClass(KFactorGroupComparator.class);
 		jobTwo.setReducerClass(GameEloReducer.class);
-		jobTwo.setMapOutputKeyClass(IntWritable.class);
+		jobTwo.setMapOutputKeyClass(KFactorDateWritable.class);
 		jobTwo.setMapOutputValueClass(GameWritable.class);
 		jobTwo.setOutputKeyClass(IntWritable.class);
 		jobTwo.setOutputValueClass(Text.class);

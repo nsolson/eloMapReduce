@@ -2,12 +2,11 @@ package cs435.nba.elo;
 
 import java.io.IOException;
 
-import org.apache.hadoop.io.IntWritable;
 import org.apache.hadoop.io.LongWritable;
 import org.apache.hadoop.io.Text;
 import org.apache.hadoop.mapreduce.Mapper;
 
-public class GameEloMapper extends Mapper<LongWritable, Text, IntWritable, GameWritable> {
+public class GameEloMapper extends Mapper<LongWritable, Text, KFactorDateWritable, GameWritable> {
 
 	@Override
 	public void map(LongWritable key, Text value, Context context) throws IOException, InterruptedException {
@@ -80,7 +79,8 @@ public class GameEloMapper extends Mapper<LongWritable, Text, IntWritable, GameW
 
 		int index = 20;
 		int offset = 10;
-		while (vals.length <= index + offset) {
+		System.out.println("mapper vals.length: " + vals.length);
+		while (index + offset <= vals.length) {
 
 			String playerTeamId = vals[index];
 			String playerId = vals[index + 1];
@@ -98,7 +98,10 @@ public class GameEloMapper extends Mapper<LongWritable, Text, IntWritable, GameW
 
 			try {
 				game.addPlayer(player);
+				System.out.println("mapper added player: " + player.getPlayerId() + " to game: " + game.getGameId());
 			} catch (TeamNotFoundException e) {
+				System.out.println(
+						"mapper could NOT add player: " + player.getPlayerId() + " to game: " + game.getGameId());
 				e.printStackTrace();
 			}
 
@@ -106,6 +109,14 @@ public class GameEloMapper extends Mapper<LongWritable, Text, IntWritable, GameW
 		}
 
 		// TODO change this to write to different K values
-		context.write(new IntWritable(Constants.TEST_K_FACTOR), game);
+		try {
+			System.out.println("mapper #homePlayers; " + game.getHomeTeam().getPlayers().size());
+			System.out.println("mapper #awayPlayers: " + game.getAwayTeam().getPlayers().size());
+		} catch (TeamNotFoundException e) {
+			e.printStackTrace();
+		}
+		KFactorDateWritable kFactorKey = new KFactorDateWritable(Constants.TEST_K_FACTOR, game.getYear(),
+				game.getMonth(), game.getDay());
+		context.write(kFactorKey, game);
 	}
 }

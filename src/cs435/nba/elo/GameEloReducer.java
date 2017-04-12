@@ -1,12 +1,8 @@
 package cs435.nba.elo;
 
 import java.io.IOException;
-import java.util.ArrayList;
-import java.util.Collections;
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
-import java.util.Set;
 
 import org.apache.hadoop.io.IntWritable;
 import org.apache.hadoop.io.MapWritable;
@@ -14,88 +10,22 @@ import org.apache.hadoop.io.Text;
 import org.apache.hadoop.io.Writable;
 import org.apache.hadoop.mapreduce.Reducer;
 
-public class GameEloReducer extends Reducer<IntWritable, GameWritable, IntWritable, Text> {
+public class GameEloReducer extends Reducer<KFactorDateWritable, GameWritable, IntWritable, Text> {
 
 	@Override
-	public void reduce(IntWritable key, Iterable<GameWritable> values, Context context)
+	public void reduce(KFactorDateWritable key, Iterable<GameWritable> values, Context context)
 			throws IOException, InterruptedException {
 
-		// This should be able to calculate Elo values?
-		// Need to iterate over entire set, extract games and extract player elo
-		// values
+		// Games are sorted earliest to latest so we can calc Elo one by one
+		int gameNum = 0;
 
-		// The Key is our K-Factor
-		double kFactor = (double) key.get();
+		double kFactor = key.getKFactor();
 
-		// Map<playerID, playerElo> for retreiving their Elo during calculations
 		Map<String, PlayerEloWritable> playerEloMap = new HashMap<String, PlayerEloWritable>();
-
-		// Use an arrayList to keep track of games because we can sort this
-		// before calculating Elo
-		List<GameWritable> sortedGames = new ArrayList<GameWritable>();
 		for (GameWritable game : values) {
 
-			// Add the game to the list of games
-			// Use copy constructor instead of object reference as it will
-			// disappear once iterated over
-			sortedGames.add(new GameWritable(game));
+			++gameNum;
 
-			// Get the players from the game and add the to the playerEloMap, if
-			// they don't already exist
-			try {
-
-				TeamGameWritable homeTeam = game.getHomeTeam();
-				MapWritable players = homeTeam.getPlayers();
-				Set<Writable> playerKeys = players.keySet();
-				for (Writable playerKey : playerKeys) {
-
-					PlayerGameWritable player = (PlayerGameWritable) players.get(playerKey);
-					String playerId = new String(player.getPlayerId());
-
-					// Only add it if not there
-					if (!playerEloMap.containsKey(playerId)) {
-
-						String playerName = new String(player.getName());
-						playerEloMap.put(playerId, new PlayerEloWritable(playerId, playerName));
-					}
-				}
-			} catch (TeamNotFoundException e) {
-
-				System.err.println("Error game: " + game.getGameId() + " does not have a home team");
-				e.printStackTrace();
-			}
-
-			try {
-
-				TeamGameWritable awayTeam = game.getAwayTeam();
-				MapWritable players = awayTeam.getPlayers();
-				Set<Writable> playerKeys = players.keySet();
-				for (Writable playerKey : playerKeys) {
-
-					PlayerGameWritable player = (PlayerGameWritable) players.get(playerKey);
-					String playerId = new String(player.getPlayerId());
-
-					// Only add it if not there
-					if (!playerEloMap.containsKey(playerId)) {
-
-						String playerName = new String(player.getName());
-						playerEloMap.put(playerId, new PlayerEloWritable(playerId, playerName));
-					}
-				}
-
-			} catch (TeamNotFoundException e) {
-
-				System.err.println("Error game: " + game.getGameId() + " does not have an away team");
-				e.printStackTrace();
-			}
-		}
-
-		// Sort the games so they are in order from earliest to latest
-		Collections.sort(sortedGames);
-		int gameId = 0;
-		for (GameWritable game : sortedGames) {
-
-			// For each game we need to:
 			// 1. Set the starting elo for all the players
 			// 2. Get the starting elo for both teams
 			// 3. Figure out who won
@@ -104,10 +34,70 @@ public class GameEloReducer extends Reducer<IntWritable, GameWritable, IntWritab
 			// 6. Update the elo value for the players in the playerEloMap so we
 			// get correct values for the next game
 
-			// 1. Set the starting elo for all the players
-			game.setPlayersStartingElo(playerEloMap);
-
 			try {
+
+				// 1. Set the starting elo for all the players
+				System.out.println(
+						"reducer game " + gameNum + " #homePlayers; " + game.getHomeTeam().getPlayers().size());
+				System.out.println(
+						"reducer game " + gameNum + " #awayPlayers: " + game.getAwayTeam().getPlayers().size());
+				for (Writable id : game.getHomeTeam().getPlayers().keySet()) {
+
+					String playerId = ((Text) id).toString();
+					String playerName = "";
+					try {
+
+						PlayerGameWritable player = game.getHomeTeam().getPlayer(playerId);
+						playerName = player.getName();
+
+					} catch (PlayerNotFoundException e) {
+						System.err.println("Could not find player: " + playerId + " even though they were in keyset");
+						e.printStackTrace();
+					}
+
+					if (!playerEloMap.containsKey(playerId)) {
+
+						playerEloMap.put(playerId, new PlayerEloWritable(playerId, playerName));
+					}
+
+					try {
+
+						game.getHomeTeam().getPlayer(playerId).setStartElo(playerEloMap.get(playerId).getElo());
+
+					} catch (PlayerNotFoundException e) {
+						System.err.println("Could not find player: " + playerId + " even though they were in keyset");
+						e.printStackTrace();
+					}
+				}
+
+				for (Writable id : game.getAwayTeam().getPlayers().keySet()) {
+
+					String playerId = ((Text) id).toString();
+					String playerName = "";
+					try {
+
+						PlayerGameWritable player = game.getAwayTeam().getPlayer(playerId);
+						playerName = player.getName();
+
+					} catch (PlayerNotFoundException e) {
+						System.err.println("Could not find player: " + playerId + " even though they were in keyset");
+						e.printStackTrace();
+					}
+
+					if (!playerEloMap.containsKey(playerId)) {
+
+						playerEloMap.put(playerId, new PlayerEloWritable(playerId, playerName));
+					}
+
+					try {
+
+						game.getAwayTeam().getPlayer(playerId).setStartElo(playerEloMap.get(playerId).getElo());
+
+					} catch (PlayerNotFoundException e) {
+						System.err.println("Could not find player: " + playerId + " even though they were in keyset");
+						e.printStackTrace();
+					}
+				}
 
 				// 2. Get the starting elo for both teams
 				double homeElo = game.getHomeTeam().getStartElo();
@@ -124,7 +114,7 @@ public class GameEloReducer extends Reducer<IntWritable, GameWritable, IntWritab
 				double eHome = rHome / (rHome + rAway);
 				double eAway = rAway / (rHome + rAway);
 
-				// Start with numbers that come from tie
+				// Start with numbers that represent tie
 				double sHome = 0.5;
 				double sAway = 0.5;
 				if (homeWin) {
@@ -146,27 +136,34 @@ public class GameEloReducer extends Reducer<IntWritable, GameWritable, IntWritab
 				game.getAwayTeam().changeElo(awayEloChange);
 
 				// 6. Update the elo value for the players in the playerEloMap
-				// so we get correct values for the next game
+				// so we
 				MapWritable homePlayers = game.getHomeTeam().getPlayers();
-				Set<Writable> homeIds = homePlayers.keySet();
-				for (Writable homeId : homeIds) {
+				for (Writable homeId : homePlayers.keySet()) {
+
+					PlayerGameWritable homePlayer = (PlayerGameWritable) homePlayers.get(homeId);
+					double endElo = homePlayer.getEndElo();
 
 					String homePlayerId = ((Text) homeId).toString();
 					if (playerEloMap.containsKey(homePlayerId)) {
-						double endElo = ((PlayerGameWritable) homePlayers.get(homeId)).getEndElo();
 						playerEloMap.get(homePlayerId).setElo(endElo);
+					} else {
+						playerEloMap.put(homePlayerId,
+								new PlayerEloWritable(homePlayer.getPlayerId(), homePlayer.getName(), endElo));
 					}
-
 				}
 
 				MapWritable awayPlayers = game.getAwayTeam().getPlayers();
-				Set<Writable> awayIds = awayPlayers.keySet();
-				for (Writable awayId : awayIds) {
+				for (Writable awayId : awayPlayers.keySet()) {
+
+					PlayerGameWritable awayPlayer = (PlayerGameWritable) awayPlayers.get(awayId);
+					double endElo = awayPlayer.getEndElo();
 
 					String awayPlayerId = ((Text) awayId).toString();
 					if (playerEloMap.containsKey(awayPlayerId)) {
-						double endElo = ((PlayerGameWritable) awayPlayers.get(awayId)).getEndElo();
 						playerEloMap.get(awayPlayerId).setElo(endElo);
+					} else {
+						playerEloMap.put(awayPlayerId,
+								new PlayerEloWritable(awayPlayer.getPlayerId(), awayPlayer.getName(), endElo));
 					}
 				}
 
@@ -203,12 +200,13 @@ public class GameEloReducer extends Reducer<IntWritable, GameWritable, IntWritab
 				}
 
 				// Write Game Elo Info out
-				context.write(new IntWritable(++gameId), new Text(str));
+				context.write(new IntWritable(gameNum), new Text(str));
 
 			} catch (TeamNotFoundException e) {
-				System.err.println("Error could not find both teams for gameId: " + game.getGameId());
+				System.err.println("Could not get home and away team for gameId: " + game.getGameId());
 				e.printStackTrace();
 			}
+
 		}
 	}
 }
