@@ -272,10 +272,19 @@ public class TeamGameWritable implements WritableComparable<TeamGameWritable> {
 	 */
 	public void changeElo(double eloChange) {
 
+		// The eloChange is for the entire team, but the team elo is an average
+		// of all the players elo
+		// Therefore the "overall" change for the team is eloChange * # players
 		Set<Writable> keys = players.keySet();
+		double totalEloChange = eloChange * keys.size();
+
 		if (keys.size() != 0) {
 
-			double eloChangeForPlayer = eloChange / keys.size();
+			// The change for this player is the totalEloChange / their share
+			// I know it seems pointless to * keys.size() just to divide by
+			// keys.size(), but this is in place so we can switch to give more
+			// or less Elo depending on a player's stats
+			double eloChangeForPlayer = totalEloChange / keys.size();
 			for (Writable playerId : keys) {
 				PlayerGameWritable player = (PlayerGameWritable) players.get(playerId);
 				double startElo = player.getStartElo();
