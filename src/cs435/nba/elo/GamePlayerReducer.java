@@ -50,11 +50,12 @@ public class GamePlayerReducer extends Reducer<Text, Text, NullWritable, Text> {
 				// 21. homeTotalTurnovers
 				// 22. homeTotalPoints (same as 15)
 				String gameId = vals[0];
+				int seasonYear = Integer.parseInt(vals[1]);
 				int year = Integer.parseInt(vals[2]);
 				int month = Integer.parseInt(vals[3]);
 				int day = Integer.parseInt(vals[4]);
 
-				game = new GameWritable(gameId, year, month, day);
+				game = new GameWritable(gameId, seasonYear, year, month, day);
 
 				String awayTeamId = vals[5];
 				double awayPoints = Double.parseDouble(vals[6]);
@@ -94,7 +95,7 @@ public class GamePlayerReducer extends Reducer<Text, Text, NullWritable, Text> {
 				// 8. blocks
 				// 9. turnovers
 				// 10. points
-				String gameId = vals[0];
+				// String gameId = vals[0];
 				String teamId = vals[1];
 				String playerId = vals[2];
 				String playerName = vals[3];
@@ -121,8 +122,12 @@ public class GamePlayerReducer extends Reducer<Text, Text, NullWritable, Text> {
 		String str = "";
 		if (game != null && homeTeam != null && awayTeam != null) {
 
+			// IMPORTANT: If you change the order here you must change the order
+			// in {@link GameEloMapper}
+
 			// Game info
-			str += game.getGameId() + "," + game.getYear() + "," + game.getMonth() + "," + game.getDay();
+			str += game.getGameId() + "," + game.getSeasonYear() + "," + game.getYear() + "," + game.getMonth() + ","
+					+ game.getDay();
 
 			// awayTeam Info
 			str += "," + awayTeam.getTeamId() + "," + awayTeam.getPoints() + "," + awayTeam.getMinPlayed() + ","

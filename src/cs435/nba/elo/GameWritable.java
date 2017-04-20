@@ -25,6 +25,11 @@ public class GameWritable implements WritableComparable<GameWritable> {
 	private String gameId;
 
 	/**
+	 * The season year of the game (not actual year)
+	 */
+	private int seasonYear;
+
+	/**
 	 * The actual year of the game (not season year)
 	 */
 	private int year;
@@ -54,7 +59,8 @@ public class GameWritable implements WritableComparable<GameWritable> {
 	 */
 	public GameWritable() {
 		// Call actual constructor with known invalid parameters
-		this(Constants.INVALID_ID, Constants.INVALID_DATE, Constants.INVALID_DATE, Constants.INVALID_DATE);
+		this(Constants.INVALID_ID, Constants.INVALID_DATE, Constants.INVALID_DATE, Constants.INVALID_DATE,
+				Constants.INVALID_DATE);
 	}
 
 	/**
@@ -64,7 +70,7 @@ public class GameWritable implements WritableComparable<GameWritable> {
 	 *            The ID of the game
 	 */
 	public GameWritable(String gameId) {
-		this(gameId, Constants.INVALID_DATE, Constants.INVALID_DATE, Constants.INVALID_DATE);
+		this(gameId, Constants.INVALID_DATE, Constants.INVALID_DATE, Constants.INVALID_DATE, Constants.INVALID_DATE);
 	}
 
 	/**
@@ -72,6 +78,8 @@ public class GameWritable implements WritableComparable<GameWritable> {
 	 * 
 	 * @param gameId
 	 *            The ID of the game
+	 * @param seasonYear
+	 *            The season year of the game
 	 * @param year
 	 *            The actual year of the game (not the season year)
 	 * @param month
@@ -79,8 +87,9 @@ public class GameWritable implements WritableComparable<GameWritable> {
 	 * @param day
 	 *            The actual day of the game
 	 */
-	public GameWritable(String gameId, int year, int month, int day) {
+	public GameWritable(String gameId, int seasonYear, int year, int month, int day) {
 		this.gameId = gameId;
+		this.seasonYear = seasonYear;
 		this.year = year;
 		this.month = month;
 		this.day = day;
@@ -100,6 +109,7 @@ public class GameWritable implements WritableComparable<GameWritable> {
 
 		if (game != null) {
 			this.gameId = new String(game.getGameId());
+			this.seasonYear = game.getSeasonYear();
 			this.year = game.getYear();
 			this.month = game.getMonth();
 
@@ -121,6 +131,13 @@ public class GameWritable implements WritableComparable<GameWritable> {
 	 */
 	public String getGameId() {
 		return gameId;
+	}
+
+	/**
+	 * @return The {@link GameWritable#seasonYear}
+	 */
+	public int getSeasonYear() {
+		return seasonYear;
 	}
 
 	/**
@@ -296,6 +313,7 @@ public class GameWritable implements WritableComparable<GameWritable> {
 	public void readFields(DataInput in) throws IOException {
 
 		gameId = WritableUtils.readString(in);
+		seasonYear = Integer.parseInt(WritableUtils.readString(in));
 		year = Integer.parseInt(WritableUtils.readString(in));
 		month = Integer.parseInt(WritableUtils.readString(in));
 		day = Integer.parseInt(WritableUtils.readString(in));
@@ -320,6 +338,7 @@ public class GameWritable implements WritableComparable<GameWritable> {
 	@Override
 	public void write(DataOutput out) throws IOException {
 		WritableUtils.writeString(out, gameId);
+		WritableUtils.writeString(out, Integer.toString(seasonYear));
 		WritableUtils.writeString(out, Integer.toString(year));
 		WritableUtils.writeString(out, Integer.toString(month));
 		WritableUtils.writeString(out, Integer.toString(day));
@@ -354,36 +373,47 @@ public class GameWritable implements WritableComparable<GameWritable> {
 			return -1;
 		}
 
-		if (year == other.getYear()) {
+		if (seasonYear == other.getSeasonYear()) {
 
-			if (month == other.getMonth()) {
+			if (year == other.getYear()) {
 
-				if (day == other.getDay()) {
+				if (month == other.getMonth()) {
 
-					// Same date, return comparison of gameIDs
-					return gameId.compareTo(other.getGameId());
+					if (day == other.getDay()) {
+
+						// Same date, return comparison of gameIDs
+						return gameId.compareTo(other.getGameId());
+
+					} else {
+
+						// month and year are equal
+						// day - otherDay will be negative if our day is
+						// earlier,
+						// positive if our day is later
+						return day - other.getDay();
+					}
 
 				} else {
 
-					// month and year are equal
-					// day - otherDay will be negative if our day is earlier,
-					// positive if our day is later
-					return day - other.getDay();
+					// year is equal
+					// month - otherMonth will be negative if our month is
+					// earlier,
+					// positive if our month is later
+					return month - other.getMonth();
 				}
 
 			} else {
 
-				// year is equal
-				// month - otherMonth will be negative if our month is earlier,
-				// positive if our month is later
-				return month - other.getMonth();
+				// year - otherYear will be negative if our year is earlier,
+				// positive if our year is later
+				return year - other.getYear();
 			}
 
 		} else {
 
-			// year - otherYear will be negative if our year is earlier,
-			// positive if our year is later
-			return year - other.getYear();
+			// seasonYear - otherSeasonYear will be negative if our year is
+			// earlier, positive if our year is later
+			return seasonYear - other.getSeasonYear();
 		}
 	}
 

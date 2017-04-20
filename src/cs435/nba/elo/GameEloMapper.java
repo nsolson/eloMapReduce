@@ -12,86 +12,93 @@ public class GameEloMapper extends Mapper<LongWritable, Text, KFactorDateWritabl
 	public void map(LongWritable key, Text value, Context context) throws IOException, InterruptedException {
 
 		// This map gets a single file, comma separated
-		// 0. gameId
-		// 1. year
-		// 2. month
-		// 3. day
-		// 4. awayTeamId
-		// 5. awayPoints
-		// 6. awayMinPlayed
-		// 7. awayRebounds
-		// 8. awayAssists
-		// 9. awaySteals
-		// 10. awayBlocks
-		// 11. awayTurnovers
-		// 12. homeTeamId
-		// 13. homePoints
-		// 14. homeMinPlayed
-		// 15. homeRebounds
-		// 16. homeAssists
-		// 17. homeSteals
-		// 18. homeBlocks
-		// 19. homeTurnovers
-		// 20 + (i*10). playerTeamId
-		// 21 + (i*10). playerId
-		// 22 + (i*10). playerName
-		// 23 + (i*10). playerMinPlayed
-		// 24 + (i*10). playerRebounds
-		// 25 + (i*10). playerAssists
-		// 26 + (i*10). playerSteals
-		// 27 + (i*10). playerBlocks
-		// 28 + (i*10). playerTurnovers
-		// 29 + (i*10). playerPoints
+		int gameIdIndex = 0;
+		int seasonYearIndex = 1;
+		int yearIndex = 2;
+		int monthIndex = 3;
+		int dayIndex = 4;
+		int awayTeamIdIndex = 5;
+		int awayPointsIndex = 6;
+		int awayMinPlayedIndex = 7;
+		int awayReboundsIndex = 8;
+		int awayAssistsIndex = 9;
+		int awayStealsIndex = 10;
+		int awayBlocksIndex = 11;
+		int awayTurnoversIndex = 12;
+		int homeTeamIdIndex = 13;
+		int homePointsIndex = 14;
+		int homeMinPlayedIndex = 15;
+		int homeReboundsIndex = 16;
+		int homeAssistsIndex = 17;
+		int homeStealsIndex = 18;
+		int homeBlocksIndex = 19;
+		int homeTurnoversIndex = 20;
+
+		int playerTeamIdIndex = 21;
+		int playerIdIndex = 22;
+		int playerNameIndex = 23;
+		int playerMinPlayedIndex = 24;
+		int playerReboundsIndex = 25;
+		int playerAssistsIndex = 26;
+		int playerStealsIndex = 27;
+		int playerBlocksIndex = 28;
+		int playerTurnoversIndex = 29;
+		int playerPointsIndex = 20;
+
+		int numPlayerCols = 10;
+		int playerIndexStart = 21;
+
 		String[] vals = value.toString().split(",");
 
-		String gameId = vals[0];
-		int year = Integer.parseInt(vals[1]);
-		int month = Integer.parseInt(vals[2]);
-		int day = Integer.parseInt(vals[3]);
+		String gameId = vals[gameIdIndex];
+		int seasonYear = Integer.parseInt(vals[seasonYearIndex]);
+		int year = Integer.parseInt(vals[yearIndex]);
+		int month = Integer.parseInt(vals[monthIndex]);
+		int day = Integer.parseInt(vals[dayIndex]);
 
-		GameWritable game = new GameWritable(gameId, year, month, day);
+		GameWritable game = new GameWritable(gameId, seasonYear, year, month, day);
 
-		String awayTeamId = vals[4];
-		double awayPoints = Double.parseDouble(vals[5]);
-		double awayMinPlayed = Double.parseDouble(vals[6]);
-		double awayRebounds = Double.parseDouble(vals[7]);
-		double awayAssists = Double.parseDouble(vals[8]);
-		double awaySteals = Double.parseDouble(vals[9]);
-		double awayBlocks = Double.parseDouble(vals[10]);
-		double awayTurnovers = Double.parseDouble(vals[11]);
+		String awayTeamId = vals[awayTeamIdIndex];
+		double awayPoints = Double.parseDouble(vals[awayPointsIndex]);
+		double awayMinPlayed = Double.parseDouble(vals[awayMinPlayedIndex]);
+		double awayRebounds = Double.parseDouble(vals[awayReboundsIndex]);
+		double awayAssists = Double.parseDouble(vals[awayAssistsIndex]);
+		double awaySteals = Double.parseDouble(vals[awayStealsIndex]);
+		double awayBlocks = Double.parseDouble(vals[awayBlocksIndex]);
+		double awayTurnovers = Double.parseDouble(vals[awayTurnoversIndex]);
 
 		TeamGameWritable awayTeam = new TeamGameWritable(awayTeamId, awayPoints, awayMinPlayed, awayRebounds,
 				awayAssists, awaySteals, awayBlocks, awayTurnovers);
 		game.setAwayTeam(awayTeam);
 
-		String homeTeamId = vals[12];
-		double homePoints = Double.parseDouble(vals[13]);
-		double homeMinPlayed = Double.parseDouble(vals[14]);
-		double homeRebounds = Double.parseDouble(vals[15]);
-		double homeAssists = Double.parseDouble(vals[16]);
-		double homeSteals = Double.parseDouble(vals[17]);
-		double homeBlocks = Double.parseDouble(vals[18]);
-		double homeTurnovers = Double.parseDouble(vals[19]);
+		String homeTeamId = vals[homeTeamIdIndex];
+		double homePoints = Double.parseDouble(vals[homePointsIndex]);
+		double homeMinPlayed = Double.parseDouble(vals[homeMinPlayedIndex]);
+		double homeRebounds = Double.parseDouble(vals[homeReboundsIndex]);
+		double homeAssists = Double.parseDouble(vals[homeAssistsIndex]);
+		double homeSteals = Double.parseDouble(vals[homeStealsIndex]);
+		double homeBlocks = Double.parseDouble(vals[homeBlocksIndex]);
+		double homeTurnovers = Double.parseDouble(vals[homeTurnoversIndex]);
 
 		TeamGameWritable homeTeam = new TeamGameWritable(homeTeamId, homePoints, homeMinPlayed, homeRebounds,
 				homeAssists, homeSteals, homeBlocks, homeTurnovers);
 		game.setHomeTeam(homeTeam);
 
-		int index = 20;
-		int offset = 10;
 		System.out.println("mapper vals.length: " + vals.length);
-		while (index + offset <= vals.length) {
+		int iteration = 0;
+		;
+		while (playerIndexStart + (numPlayerCols * iteration) <= vals.length) {
 
-			String playerTeamId = vals[index];
-			String playerId = vals[index + 1];
-			String playerName = vals[index + 2];
-			double playerMinPlayed = Double.parseDouble(vals[index + 3]);
-			double playerRebounds = Double.parseDouble(vals[index + 4]);
-			double playerAssists = Double.parseDouble(vals[index + 5]);
-			double playerSteals = Double.parseDouble(vals[index + 6]);
-			double playerBlocks = Double.parseDouble(vals[index + 7]);
-			double playerTurnovers = Double.parseDouble(vals[index + 8]);
-			double playerPoints = Double.parseDouble(vals[index + 9]);
+			String playerTeamId = vals[playerTeamIdIndex + (numPlayerCols * iteration)];
+			String playerId = vals[playerIdIndex + (numPlayerCols * iteration)];
+			String playerName = vals[playerNameIndex + (numPlayerCols * iteration)];
+			double playerMinPlayed = Double.parseDouble(vals[playerMinPlayedIndex + (numPlayerCols * iteration)]);
+			double playerRebounds = Double.parseDouble(vals[playerReboundsIndex + (numPlayerCols * iteration)]);
+			double playerAssists = Double.parseDouble(vals[playerAssistsIndex + (numPlayerCols * iteration)]);
+			double playerSteals = Double.parseDouble(vals[playerStealsIndex + (numPlayerCols * iteration)]);
+			double playerBlocks = Double.parseDouble(vals[playerBlocksIndex + (numPlayerCols * iteration)]);
+			double playerTurnovers = Double.parseDouble(vals[playerTurnoversIndex + (numPlayerCols * iteration)]);
+			double playerPoints = Double.parseDouble(vals[playerPointsIndex + (numPlayerCols * iteration)]);
 
 			PlayerGameWritable player = new PlayerGameWritable(playerTeamId, playerId, playerName, playerMinPlayed,
 					playerRebounds, playerAssists, playerSteals, playerBlocks, playerTurnovers, playerPoints);
@@ -105,7 +112,7 @@ public class GameEloMapper extends Mapper<LongWritable, Text, KFactorDateWritabl
 				e.printStackTrace();
 			}
 
-			index += offset;
+			++iteration;
 		}
 
 		// TODO change this to write to different K values
@@ -115,8 +122,8 @@ public class GameEloMapper extends Mapper<LongWritable, Text, KFactorDateWritabl
 		} catch (TeamNotFoundException e) {
 			e.printStackTrace();
 		}
-		KFactorDateWritable kFactorKey = new KFactorDateWritable(Constants.TEST_K_FACTOR, game.getYear(),
-				game.getMonth(), game.getDay());
+		KFactorDateWritable kFactorKey = new KFactorDateWritable(Constants.TEST_K_FACTOR, game.getSeasonYear(),
+				game.getYear(), game.getMonth(), game.getDay());
 		context.write(kFactorKey, game);
 	}
 }
