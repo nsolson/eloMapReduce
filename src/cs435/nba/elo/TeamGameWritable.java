@@ -24,6 +24,11 @@ import org.apache.hadoop.io.WritableUtils;
 public class TeamGameWritable implements WritableComparable<TeamGameWritable> {
 
 	/**
+	 * The season this game was played
+	 */
+	private int seasonYear;
+
+	/**
 	 * The ID of the team
 	 */
 	private String teamId;
@@ -73,25 +78,16 @@ public class TeamGameWritable implements WritableComparable<TeamGameWritable> {
 	 * Default constructor, required for Hadoop
 	 */
 	public TeamGameWritable() {
-		this(Constants.INVALID_ID, Constants.INVALID_STAT, Constants.INVALID_STAT, Constants.INVALID_STAT,
-				Constants.INVALID_STAT, Constants.INVALID_STAT, Constants.INVALID_STAT, Constants.INVALID_STAT);
-	}
-
-	/**
-	 * Constructor for the case of setting up players. We don't know overall
-	 * values, we just know teamID
-	 * 
-	 * @param teamId
-	 *            The ID of this team
-	 */
-	public TeamGameWritable(String teamId) {
-		this(teamId, Constants.INVALID_STAT, Constants.INVALID_STAT, Constants.INVALID_STAT, Constants.INVALID_STAT,
-				Constants.INVALID_STAT, Constants.INVALID_STAT, Constants.INVALID_STAT);
+		this(Constants.INVALID_DATE, Constants.INVALID_ID, Constants.INVALID_STAT, Constants.INVALID_STAT,
+				Constants.INVALID_STAT, Constants.INVALID_STAT, Constants.INVALID_STAT, Constants.INVALID_STAT,
+				Constants.INVALID_STAT);
 	}
 
 	/**
 	 * Constructor that initializes all values
 	 * 
+	 * @param seasonYear
+	 *            The season this game was played
 	 * @param teamId
 	 *            The ID of this team
 	 * @param points
@@ -109,8 +105,8 @@ public class TeamGameWritable implements WritableComparable<TeamGameWritable> {
 	 * @param turnovers
 	 *            Total turnovers by the team
 	 */
-	public TeamGameWritable(String teamId, double points, double minPlayed, double rebounds, double assists,
-			double steals, double blocks, double turnovers) {
+	public TeamGameWritable(int seasonYear, String teamId, double points, double minPlayed, double rebounds,
+			double assists, double steals, double blocks, double turnovers) {
 
 		this.teamId = teamId;
 		this.points = points;
@@ -134,6 +130,7 @@ public class TeamGameWritable implements WritableComparable<TeamGameWritable> {
 		this();
 
 		if (team != null) {
+			this.seasonYear = team.getSeasonYear();
 			this.teamId = new String(team.getTeamId());
 			this.points = team.getPoints();
 			this.minPlayed = team.getMinPlayed();
@@ -149,6 +146,13 @@ public class TeamGameWritable implements WritableComparable<TeamGameWritable> {
 				this.addPlayer(new PlayerGameWritable((PlayerGameWritable) teamPlayers.get(key)));
 			}
 		}
+	}
+
+	/**
+	 * @return {@link TeamGameWritable#seasonYear}
+	 */
+	public int getSeasonYear() {
+		return seasonYear;
 	}
 
 	/**
@@ -272,7 +276,7 @@ public class TeamGameWritable implements WritableComparable<TeamGameWritable> {
 	 */
 	public void changeElo(double eloChange) {
 
-		// The eloChange is for the entire team, but the team elo is an average
+		// The eloChange given is for the team, but the team elo is an average
 		// of all the players elo
 		// Therefore the "overall" change for the team is eloChange * # players
 		Set<Writable> keys = players.keySet();
@@ -280,17 +284,151 @@ public class TeamGameWritable implements WritableComparable<TeamGameWritable> {
 
 		if (keys.size() != 0) {
 
-			// The change for this player is the totalEloChange / their share
-			// I know it seems pointless to * keys.size() just to divide by
-			// keys.size(), but this is in place so we can switch to give more
-			// or less Elo depending on a player's stats
-			double eloChangeForPlayer = totalEloChange / keys.size();
-			for (Writable playerId : keys) {
-				PlayerGameWritable player = (PlayerGameWritable) players.get(playerId);
-				double startElo = player.getStartElo();
-				player.setEndElo(startElo + eloChangeForPlayer);
+			if (eloChange < 0) {
+
+				// The team lost
+				// Each player gets their "equal" share of the loss
+
+				// First get the entire team sum
+				double teamEloSum = 0;
+				for (Writable playerId : keys) {
+					PlayerGameWritable player = (PlayerGameWritable) players.get(playerId);
+					teamEloSum += player.getStartElo();
+				}
+
+				// Now calculate what each player's "equal" share is
+				for (Writable playerId : keys) {
+					PlayerGameWritable player = (PlayerGameWritable) players.get(playerId);
+					double startElo = player.getStartElo();
+					double playerShare = totalEloChange * (startElo / teamEloSum);
+					player.setEndElo(startElo + playerShare);
+				}
+
+			} else if (eloChange > 0) {
+
+				// The team won
+				// Players are awarded based on their performance
+				double teamEloScore = 0;
+				for (Writable playerId : keys) {
+					PlayerGameWritable player = (PlayerGameWritable) players.get(playerId);
+					teamEloScore += getEloScore(player);
+				}
+
+				// Now calculate what change in Elo the player earned
+				for (Writable playerId : keys) {
+					PlayerGameWritable player = (PlayerGameWritable) players.get(playerId);
+					double startElo = player.getStartElo();
+					double playerEloScore = getEloScore(player);
+					double playerShare = totalEloChange * (playerEloScore / teamEloScore);
+					player.setEndElo(startElo + playerShare);
+				}
 			}
 		}
+	}
+
+	/**
+	 * Calculates the player's "Elo Score" for a game Elo points are the sum of:
+	 * <ul>
+	 * <li>points * 1</li>
+	 * <li>rebounds * 2 * eFG% * (1 - TO%)</li>
+	 * <li>assists * 2</li>
+	 * <li>steals * 2 * eFG% * (1 - TO%)</li>
+	 * <li>blocks * 2 * eFG%</li>
+	 * <li>turnovers * -2 * eFG% * (1 - TO%)</li>
+	 * </ul>
+	 * 
+	 * @param player
+	 *            The {@link PlayerGameWritable} to calculate Elo Score for
+	 * @return the "Elo Score" the player got in this game
+	 */
+	private double getEloScore(PlayerGameWritable player) {
+
+		double playerPoints = player.getPoints();
+		double playerRebounds = player.getRebounds();
+		double playerAssists = player.getAssists();
+		double playerSteals = player.getSteals();
+		double playerBlocks = player.getBlocks();
+		double playerTurnovers = player.getTurnovers();
+
+		return getEloScore(playerPoints, playerRebounds, playerAssists, playerSteals, playerBlocks, playerTurnovers);
+	}
+
+	/**
+	 * Calculates the player's "Elo Score" for a game Elo points are the sum of:
+	 * <ul>
+	 * <li>points * 1</li>
+	 * <li>rebounds * 2 * eFG% * (1 - TO%)</li>
+	 * <li>assists * 2</li>
+	 * <li>steals * 2 * eFG% * (1 - TO%)</li>
+	 * <li>blocks * 2 * eFG%</li>
+	 * <li>turnovers * -2 * eFG% * (1 - TO%)</li>
+	 * </ul>
+	 * 
+	 * @param eloPoints
+	 *            The points scored
+	 * @param eloRebounds
+	 *            The number of rebounds obtained
+	 * @param eloAssists
+	 *            The number of assists given
+	 * @param eloSteals
+	 *            The number of steals obtained
+	 * @param eloBlocks
+	 *            The number of blocks
+	 * @param eloTurnovers
+	 *            The number of turnovers
+	 * @return the "Elo Score" the player got in this game
+	 */
+	private double getEloScore(double eloPoints, double eloRebounds, double eloAssists, double eloSteals,
+			double eloBlocks, double eloTurnovers) {
+
+		/*
+		 * Get the effective FG percent and turnover percent for this season
+		 */
+		LeagueStats leagueStats = LeagueStats.getInstance();
+		double eFGPercent = leagueStats.getEffectiveFieldGoalPercent(seasonYear);
+		double toPercent = leagueStats.getTurnoverPercent(seasonYear);
+
+		// We only use 1 - toPercent
+		double noTOPercent = 1 - toPercent;
+
+		/*
+		 * Points count for a single point for the team
+		 */
+		double pointsScore = eloPoints * 1;
+
+		/*
+		 * Rebounds give the team 2 points if they score and don't turn it over
+		 */
+		double reboundsScore = eloRebounds * 2 * eFGPercent * noTOPercent;
+
+		/**
+		 * Assists give the team at least 2 points
+		 */
+		double assistsScore = eloAssists * 2;
+
+		/**
+		 * Steals give the team 2 poitns if they score and don't turn it over
+		 */
+		double stealsScore = eloSteals * 2 * eFGPercent * noTOPercent;
+
+		/**
+		 * Blocks take 2 points away from the other team assuming they would
+		 * have made the shot. Turnovers are not taken into account because we
+		 * don't know which team has the ball after a block.
+		 */
+		double blocksScore = eloBlocks * 2 * eFGPercent;
+
+		/**
+		 * Turnovers give the other team 2 points assuming they score and don't
+		 * turn it over
+		 */
+		double turnoversScore = eloTurnovers * -2 * eFGPercent * noTOPercent;
+
+		/*
+		 * Total eloScore is sum of all above contributions
+		 */
+		return pointsScore + reboundsScore + assistsScore + stealsScore + blocksScore + turnoversScore;
+
 	}
 
 	/**
@@ -429,6 +567,7 @@ public class TeamGameWritable implements WritableComparable<TeamGameWritable> {
 	@Override
 	public void readFields(DataInput in) throws IOException {
 
+		seasonYear = Integer.parseInt(WritableUtils.readString(in));
 		teamId = WritableUtils.readString(in);
 		points = Double.parseDouble(WritableUtils.readString(in));
 		minPlayed = Double.parseDouble(WritableUtils.readString(in));
@@ -449,6 +588,7 @@ public class TeamGameWritable implements WritableComparable<TeamGameWritable> {
 	@Override
 	public void write(DataOutput out) throws IOException {
 
+		WritableUtils.writeString(out, Integer.toString(seasonYear));
 		WritableUtils.writeString(out, teamId);
 		WritableUtils.writeString(out, Double.toString(points));
 		WritableUtils.writeString(out, Double.toString(minPlayed));

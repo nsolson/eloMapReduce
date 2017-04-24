@@ -4,13 +4,13 @@ import java.io.IOException;
 import java.util.HashMap;
 import java.util.Map;
 
-import org.apache.hadoop.io.IntWritable;
+import org.apache.hadoop.io.DoubleWritable;
 import org.apache.hadoop.io.MapWritable;
 import org.apache.hadoop.io.Text;
 import org.apache.hadoop.io.Writable;
 import org.apache.hadoop.mapreduce.Reducer;
 
-public class GameEloReducer extends Reducer<KFactorDateWritable, GameWritable, IntWritable, Text> {
+public class GameEloReducer extends Reducer<KFactorDateWritable, GameWritable, DoubleWritable, Text> {
 
 	@Override
 	public void reduce(KFactorDateWritable key, Iterable<GameWritable> values, Context context)
@@ -200,7 +200,7 @@ public class GameEloReducer extends Reducer<KFactorDateWritable, GameWritable, I
 				}
 
 				// Write Game Elo Info out
-				context.write(new IntWritable(gameNum), new Text(str));
+				context.write(new DoubleWritable(kFactor), new Text(str));
 
 			} catch (TeamNotFoundException e) {
 				System.err.println("Could not get home and away team for gameId: " + game.getGameId());

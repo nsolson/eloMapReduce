@@ -13,7 +13,7 @@ import java.util.Map;
 public class LeagueStats {
 
 	private static LeagueStats leagueStats = null;
-	private Map<Integer, Stats> stats = new HashMap<Integer, Stats>();
+	private Map<Integer, Stats> stats;
 
 	private static final int MAX_SEASON = 2017;
 	private static final int MIN_SEASON = 1947;
@@ -23,7 +23,8 @@ public class LeagueStats {
 	 */
 	private LeagueStats() {
 
-		stats.put(2017, leagueStats.new Stats(0.514, 12.7));
+		stats = new HashMap<Integer, Stats>();
+		stats.put(2017, new Stats(0.514, 12.7));
 		stats.put(2016, new Stats(0.502, 13.2));
 		stats.put(2015, new Stats(0.496, 13.3));
 		stats.put(2014, new Stats(0.501, 13.6));
@@ -102,7 +103,7 @@ public class LeagueStats {
 	 * 
 	 * @return The singleton instance of {@link LeagueStats}
 	 */
-	public LeagueStats getInstance() {
+	public static LeagueStats getInstance() {
 
 		if (leagueStats == null) {
 			leagueStats = new LeagueStats();

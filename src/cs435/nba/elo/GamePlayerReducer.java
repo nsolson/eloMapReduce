@@ -66,8 +66,8 @@ public class GamePlayerReducer extends Reducer<Text, Text, NullWritable, Text> {
 				double awayBlocks = Double.parseDouble(vals[11]);
 				double awayTurnovers = Double.parseDouble(vals[12]);
 
-				awayTeam = new TeamGameWritable(awayTeamId, awayPoints, awayMinPlayed, awayRebounds, awayAssists,
-						awaySteals, awayBlocks, awayTurnovers);
+				awayTeam = new TeamGameWritable(seasonYear, awayTeamId, awayPoints, awayMinPlayed, awayRebounds,
+						awayAssists, awaySteals, awayBlocks, awayTurnovers);
 
 				String homeTeamId = vals[14];
 				double homePoints = Double.parseDouble(vals[15]);
@@ -78,8 +78,8 @@ public class GamePlayerReducer extends Reducer<Text, Text, NullWritable, Text> {
 				double homeBlocks = Double.parseDouble(vals[20]);
 				double homeTurnovers = Double.parseDouble(vals[21]);
 
-				homeTeam = new TeamGameWritable(homeTeamId, homePoints, homeMinPlayed, homeRebounds, homeAssists,
-						homeSteals, homeBlocks, homeTurnovers);
+				homeTeam = new TeamGameWritable(seasonYear, homeTeamId, homePoints, homeMinPlayed, homeRebounds,
+						homeAssists, homeSteals, homeBlocks, homeTurnovers);
 
 			} else if (vals.length == 11) {
 

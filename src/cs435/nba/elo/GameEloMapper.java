@@ -43,7 +43,7 @@ public class GameEloMapper extends Mapper<LongWritable, Text, KFactorDateWritabl
 		int playerStealsIndex = 27;
 		int playerBlocksIndex = 28;
 		int playerTurnoversIndex = 29;
-		int playerPointsIndex = 20;
+		int playerPointsIndex = 30;
 
 		int numPlayerCols = 10;
 		int playerIndexStart = 21;
@@ -67,8 +67,8 @@ public class GameEloMapper extends Mapper<LongWritable, Text, KFactorDateWritabl
 		double awayBlocks = Double.parseDouble(vals[awayBlocksIndex]);
 		double awayTurnovers = Double.parseDouble(vals[awayTurnoversIndex]);
 
-		TeamGameWritable awayTeam = new TeamGameWritable(awayTeamId, awayPoints, awayMinPlayed, awayRebounds,
-				awayAssists, awaySteals, awayBlocks, awayTurnovers);
+		TeamGameWritable awayTeam = new TeamGameWritable(seasonYear, awayTeamId, awayPoints, awayMinPlayed,
+				awayRebounds, awayAssists, awaySteals, awayBlocks, awayTurnovers);
 		game.setAwayTeam(awayTeam);
 
 		String homeTeamId = vals[homeTeamIdIndex];
@@ -80,14 +80,14 @@ public class GameEloMapper extends Mapper<LongWritable, Text, KFactorDateWritabl
 		double homeBlocks = Double.parseDouble(vals[homeBlocksIndex]);
 		double homeTurnovers = Double.parseDouble(vals[homeTurnoversIndex]);
 
-		TeamGameWritable homeTeam = new TeamGameWritable(homeTeamId, homePoints, homeMinPlayed, homeRebounds,
-				homeAssists, homeSteals, homeBlocks, homeTurnovers);
+		TeamGameWritable homeTeam = new TeamGameWritable(seasonYear, homeTeamId, homePoints, homeMinPlayed,
+				homeRebounds, homeAssists, homeSteals, homeBlocks, homeTurnovers);
 		game.setHomeTeam(homeTeam);
 
 		System.out.println("mapper vals.length: " + vals.length);
 		int iteration = 0;
-		;
-		while (playerIndexStart + (numPlayerCols * iteration) <= vals.length) {
+
+		while (playerIndexStart + (numPlayerCols * iteration) < vals.length) {
 
 			String playerTeamId = vals[playerTeamIdIndex + (numPlayerCols * iteration)];
 			String playerId = vals[playerIdIndex + (numPlayerCols * iteration)];
