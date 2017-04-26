@@ -19,6 +19,18 @@ public class KFactorGroupComparator extends WritableComparator {
 		int kFactorOne = kfOne.getKFactor();
 		int kFactorTwo = kfTwo.getKFactor();
 
-		return kFactorOne - kFactorTwo;
+		// System.out.println("Comparing one: " + kFactorOne + " two: " +
+		// kFactorTwo);
+
+		if (kFactorOne < kFactorTwo) {
+			// System.out.println("one < two");
+			return -1;
+		} else if (kFactorOne > kFactorTwo) {
+			// System.out.println("one > two");
+			return 1;
+		} else {
+			// System.out.println("one == two");
+			return 0;
+		}
 	}
 }

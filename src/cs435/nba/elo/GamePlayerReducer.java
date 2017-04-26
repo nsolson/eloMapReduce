@@ -151,7 +151,7 @@ public class GamePlayerReducer extends Reducer<Text, Text, NullWritable, Text> {
 			context.write(NullWritable.get(), new Text(str));
 
 		} else {
-			System.out.println("Could not get game, homeTeam or awayTeam for gameId: " + key);
+			System.err.println("Could not get game, homeTeam or awayTeam for gameId: " + key);
 		}
 
 	}

@@ -2,12 +2,12 @@ package cs435.nba.elo;
 
 import java.io.IOException;
 
-import org.apache.hadoop.io.IntWritable;
+import org.apache.hadoop.io.DoubleWritable;
 import org.apache.hadoop.io.LongWritable;
 import org.apache.hadoop.io.Text;
 import org.apache.hadoop.mapreduce.Mapper;
 
-public class KFactorAccuracyMapper extends Mapper<LongWritable, Text, Text, IntWritable> {
+public class KFactorErrorMapper extends Mapper<LongWritable, Text, Text, DoubleWritable> {
 
 	@Override
 	public void map(LongWritable key, Text value, Context context) throws IOException, InterruptedException {
@@ -48,18 +48,24 @@ public class KFactorAccuracyMapper extends Mapper<LongWritable, Text, Text, IntW
 		// System.out.println("k: " + kFactor + " home: " + homeTeamStartElo +
 		// "," + homeTeamPoints + " away: "
 		// + awayTeamStartElo + "," + awayTeamPoints);
+		double rHome = Math.pow(10, homeTeamStartElo / 400);
+		double rAway = Math.pow(10, awayTeamStartElo / 400);
+
+		double eHome = rHome / (rHome + rAway);
+		double eAway = rAway / (rHome + rAway);
+
 		if (homeTeamStartElo > awayTeamStartElo) {
 
 			// Predicted home win
 			if (homeTeamPoints > awayTeamPoints) {
 
 				// Correctly predicted
-				context.write(new Text(kFactor), new IntWritable(1));
+				context.write(new Text(kFactor), new DoubleWritable(1 - eHome));
 
 			} else {
 
 				// Incorrect prediction
-				context.write(new Text(kFactor), new IntWritable(0));
+				context.write(new Text(kFactor), new DoubleWritable(eHome));
 			}
 
 		} else if (homeTeamStartElo < awayTeamStartElo) {
@@ -68,12 +74,12 @@ public class KFactorAccuracyMapper extends Mapper<LongWritable, Text, Text, IntW
 			if (awayTeamPoints > homeTeamPoints) {
 
 				// Correctly predicted
-				context.write(new Text(kFactor), new IntWritable(1));
+				context.write(new Text(kFactor), new DoubleWritable(1 - eAway));
 
 			} else {
 
 				// Incorrect prediction
-				context.write(new Text(kFactor), new IntWritable(0));
+				context.write(new Text(kFactor), new DoubleWritable(eAway));
 			}
 
 		}

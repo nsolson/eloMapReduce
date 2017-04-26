@@ -3,7 +3,9 @@ package cs435.nba.elo;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
 import org.apache.hadoop.io.DoubleWritable;
 import org.apache.hadoop.io.Text;
@@ -51,11 +53,17 @@ public class KFactorBestReducer extends Reducer<DoubleWritable, IdEloWritable, D
 		Collections.sort(idEloList);
 
 		// Output top 10
-		for (int index = 0; index < 10; ++index) {
+		Set<IdEloWritable> idsWritten = new HashSet<IdEloWritable>();
+		for (int index = 0; index < idEloList.size() && idsWritten.size() < 10; ++index) {
+
 			IdEloWritable idElo = idEloList.get(index);
-			String str = idElo.getId() + idElo.getYear() + " " + idElo.getMonth() + " " + idElo.getDay() + "\t"
-					+ idElo.getElo();
-			context.write(key, new Text(str));
+			if (!idsWritten.contains(idElo)) {
+
+				idsWritten.add(idElo);
+				String str = idElo.getId() + " " + idElo.getYear() + " " + idElo.getMonth() + " " + idElo.getDay()
+						+ "\t" + idElo.getElo();
+				context.write(key, new Text(str));
+			}
 		}
 	}
 

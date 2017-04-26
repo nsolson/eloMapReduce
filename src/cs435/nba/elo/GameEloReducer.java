@@ -37,10 +37,12 @@ public class GameEloReducer extends Reducer<KFactorDateWritable, GameWritable, D
 			try {
 
 				// 1. Set the starting elo for all the players
-				System.out.println(
-						"reducer game " + gameNum + " #homePlayers; " + game.getHomeTeam().getPlayers().size());
-				System.out.println(
-						"reducer game " + gameNum + " #awayPlayers: " + game.getAwayTeam().getPlayers().size());
+				// System.out.println("k: " + kFactor + " reducer game " +
+				// gameNum + " #homePlayers; "
+				// + game.getHomeTeam().getPlayers().size());
+				// System.out.println("k: " + kFactor + " reducer game " +
+				// gameNum + " #awayPlayers: "
+				// + game.getAwayTeam().getPlayers().size());
 				for (Writable id : game.getHomeTeam().getPlayers().keySet()) {
 
 					String playerId = ((Text) id).toString();

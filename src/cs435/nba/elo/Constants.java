@@ -9,6 +9,11 @@ package cs435.nba.elo;
 public class Constants {
 
 	/**
+	 * Whether this is a test run or not
+	 */
+	public static boolean TEST_RUN = false;
+
+	/**
 	 * Represents an invalid ID for all things that have IDs. Mainly used where
 	 * default constructors are required.
 	 */
@@ -43,15 +48,15 @@ public class Constants {
 	/**
 	 * The minimum K-Factor to test
 	 */
-	public static final int MIN_K_FACTOR = 1;
+	public static final int MIN_K_FACTOR = 4;
 
 	/**
 	 * The max K-Factor to test
 	 */
-	public static final int MAX_K_FACTOR = 40;
+	public static final int MAX_K_FACTOR = 100;
 
 	/**
 	 * The K-Factor step size
 	 */
-	public static final int K_FACTOR_STEP = 1;
+	public static final int K_FACTOR_STEP = 4;
 }

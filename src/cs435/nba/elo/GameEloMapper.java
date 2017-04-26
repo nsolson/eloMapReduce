@@ -84,7 +84,7 @@ public class GameEloMapper extends Mapper<LongWritable, Text, KFactorDateWritabl
 				homeRebounds, homeAssists, homeSteals, homeBlocks, homeTurnovers);
 		game.setHomeTeam(homeTeam);
 
-		System.out.println("mapper vals.length: " + vals.length);
+		// System.out.println("mapper vals.length: " + vals.length);
 		int iteration = 0;
 
 		while (playerIndexStart + (numPlayerCols * iteration) < vals.length) {
@@ -105,9 +105,10 @@ public class GameEloMapper extends Mapper<LongWritable, Text, KFactorDateWritabl
 
 			try {
 				game.addPlayer(player);
-				System.out.println("mapper added player: " + player.getPlayerId() + " to game: " + game.getGameId());
+				// System.out.println("mapper added player: " +
+				// player.getPlayerId() + " to game: " + game.getGameId());
 			} catch (TeamNotFoundException e) {
-				System.out.println(
+				System.err.println(
 						"mapper could NOT add player: " + player.getPlayerId() + " to game: " + game.getGameId());
 				e.printStackTrace();
 			}
@@ -115,15 +116,28 @@ public class GameEloMapper extends Mapper<LongWritable, Text, KFactorDateWritabl
 			++iteration;
 		}
 
-		// TODO change this to write to different K values
 		try {
 			System.out.println("mapper #homePlayers; " + game.getHomeTeam().getPlayers().size());
 			System.out.println("mapper #awayPlayers: " + game.getAwayTeam().getPlayers().size());
 		} catch (TeamNotFoundException e) {
 			e.printStackTrace();
 		}
-		KFactorDateWritable kFactorKey = new KFactorDateWritable(Constants.TEST_K_FACTOR, game.getSeasonYear(),
-				game.getYear(), game.getMonth(), game.getDay());
-		context.write(kFactorKey, game);
+
+		if (Constants.TEST_RUN) {
+			// For testing
+			KFactorDateWritable kFactorKey = new KFactorDateWritable(Constants.TEST_K_FACTOR, game.getSeasonYear(),
+					game.getYear(), game.getMonth(), game.getDay());
+			context.write(kFactorKey, game);
+
+		} else {
+
+			for (int kFactor = Constants.MIN_K_FACTOR; kFactor <= Constants.MAX_K_FACTOR; kFactor += Constants.K_FACTOR_STEP) {
+
+				KFactorDateWritable kFactorKey = new KFactorDateWritable(kFactor, game.getSeasonYear(), game.getYear(),
+						game.getMonth(), game.getDay());
+				context.write(kFactorKey, game);
+			}
+		}
+
 	}
 }

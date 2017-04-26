@@ -141,8 +141,14 @@ public class IdEloWritable implements WritableComparable<IdEloWritable> {
 		}
 
 		// We want the higher elo value to be ordered first or "less than"
-		// otherElo - thisElo should give us this order
-		return (int) (other.getElo() - elo);
+		double otherElo = other.getElo();
+		if (elo > otherElo) {
+			return -1;
+		} else if (elo < otherElo) {
+			return 1;
+		} else {
+			return 0;
+		}
 	}
 
 	@Override
@@ -164,6 +170,6 @@ public class IdEloWritable implements WritableComparable<IdEloWritable> {
 
 	@Override
 	public int hashCode() {
-		return id.hashCode();
+		return new String(id + year).hashCode();
 	}
 }

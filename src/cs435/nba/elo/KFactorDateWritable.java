@@ -141,12 +141,18 @@ public class KFactorDateWritable implements WritableComparable<KFactorDateWritab
 	}
 
 	/**
-	 * Compares using dates to ensure things end up in correct order
+	 * Compares using dates to ensure things end up in correct order. We must
+	 * first sort by k Factor to group all k values together. Within a single K
+	 * Factor, items are sorted earliest date to latest date.
 	 * 
 	 * @param other
 	 *            The other {@link KFactorDateWritable} to compare
-	 * @return A negative, positive or zero if this instance is earlier than the
-	 *         given one
+	 * @return If the {@link KFactorDateWritable#kFactor} are not the same, it
+	 *         will return a negative or positive if this
+	 *         {@link KFactorDateWritable#kFactor} is less than greater than the
+	 *         given {@link KFactorDateWritable#kFactor}. If kFactors are the
+	 *         same it will return a negative, positive or zero if this instance
+	 *         is earlier, later or equal to than the given one
 	 */
 	@Override
 	public int compareTo(KFactorDateWritable other) {
@@ -155,46 +161,55 @@ public class KFactorDateWritable implements WritableComparable<KFactorDateWritab
 			return -1;
 		}
 
-		if (seasonYear == other.getSeasonYear()) {
+		if (kFactor == other.getKFactor()) {
 
-			if (year == other.getYear()) {
+			if (seasonYear == other.getSeasonYear()) {
 
-				if (month == other.getMonth()) {
+				if (year == other.getYear()) {
 
-					if (day == other.getDay()) {
+					if (month == other.getMonth()) {
 
-						// same date, return 0
-						return 0;
+						if (day == other.getDay()) {
 
+							// same date, return 0
+							return 0;
+
+						} else {
+
+							// Month and year the saem
+							// day - otherDay will be negative if our day is
+							// earlier,
+							// positive if our day is later
+							return day - other.getDay();
+						}
 					} else {
 
-						// Month and year the saem
-						// day - otherDay will be negative if our day is
+						// year is equal
+						// month - otherMonth will be negative if our month is
 						// earlier,
-						// positive if our day is later
-						return day - other.getDay();
+						// positive if our month is later
+						return month - other.getMonth();
 					}
+
 				} else {
 
-					// year is equal
-					// month - otherMonth will be negative if our month is
-					// earlier,
-					// positive if our month is later
-					return month - other.getMonth();
+					// year - otherYear will be negative if our year is earlier,
+					// positive if our year is later
+					return year - other.getYear();
 				}
 
 			} else {
 
-				// year - otherYear will be negative if our year is earlier,
-				// positive if our year is later
-				return year - other.getYear();
+				// seasonYear - otherSeasonYear will be negative if our year is
+				// earlier, positive if our year is later
+				return seasonYear - other.getSeasonYear();
 			}
 
 		} else {
 
-			// seasonYear - otherSeasonYear will be negative if our year is
-			// earlier, positive if our year is later
-			return seasonYear - other.getSeasonYear();
+			// kFactors are not the same
+			// kFactor - otherKFactor will be negative if our kValue is less
+			return kFactor - other.getKFactor();
 		}
 	}
 
