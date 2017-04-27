@@ -24,10 +24,12 @@ public class Main {
 	private static final String JOB_THREE_C_OUT_DIR = "KFactorPercent";
 	private static final String JOB_THREE_D_OUT_DIR = "KFactorErrorSquare";
 	private static final String JOB_THREE_E_OUT_DIR = "KFactorError";
+	private static final String JOB_THREE_F_OUT_DIR = "KFactorTrueError";
 
 	private static final String JOB_FOUR_A_OUT_DIR = "KFactorPercentRanked";
 	private static final String JOB_FOUR_B_OUT_DIR = "KFactorErrorSquareRanked";
 	private static final String JOB_FOUR_C_OUT_DIR = "KFactorErrorRanked";
+	private static final String JOB_FOUR_D_OUT_DIR = "KFactorTrueErrorRanked";
 
 	private static final int NUM_JOBS = 4;
 
@@ -49,9 +51,11 @@ public class Main {
 		String jobThreeCOutputPath = tmpDir + File.separator + JOB_THREE_C_OUT_DIR;
 		String jobThreeDOutputPath = tmpDir + File.separator + JOB_THREE_D_OUT_DIR;
 		String jobThreeEOutputPath = tmpDir + File.separator + JOB_THREE_E_OUT_DIR;
+		String jobThreeFOutputPath = tmpDir + File.separator + JOB_THREE_F_OUT_DIR;
 		String jobFourAOutputPath = tmpDir + File.separator + JOB_FOUR_A_OUT_DIR;
 		String jobFourBOutputPath = tmpDir + File.separator + JOB_FOUR_B_OUT_DIR;
 		String jobFourCOutputPath = tmpDir + File.separator + JOB_FOUR_C_OUT_DIR;
+		String jobFourDOutputPath = tmpDir + File.separator + JOB_FOUR_D_OUT_DIR;
 
 		/* Job 1 */
 		// Input: GamesFile + PlayersFile
@@ -223,6 +227,26 @@ public class Main {
 		jobGroupThree.addJob(jobThreeE, "K Factor Error");
 		/* End Job 3e */
 
+		// K Factor True Error
+		// Input: Output from Job 2
+		// Output: KFactor True Error
+		Configuration confThreeF = new Configuration();
+		Job jobThreeF = Job.getInstance(confThreeF);
+		jobThreeF.setJarByClass(Main.class);
+		jobThreeF.setMapperClass(KFactorTrueErrorMapper.class);
+		jobThreeF.setReducerClass(KFactorErrorReducer.class);
+		jobThreeF.setMapOutputKeyClass(Text.class);
+		jobThreeF.setMapOutputValueClass(DoubleWritable.class);
+		jobThreeF.setOutputKeyClass(Text.class);
+		jobThreeF.setOutputValueClass(DoubleWritable.class);
+		jobThreeF.setInputFormatClass(TextInputFormat.class);
+		jobThreeF.setOutputFormatClass(TextOutputFormat.class);
+
+		FileInputFormat.setInputPaths(jobThreeF, new Path(jobTwoOutputPath));
+		FileOutputFormat.setOutputPath(jobThreeF, new Path(jobThreeFOutputPath));
+		jobGroupThree.addJob(jobThreeF, "K Factor True Error");
+		/* End Job 3f */
+
 		jobGroupThree.runAndWait();
 		if (!jobGroupThree.isSuccessful()) {
 			System.err.println("\nERROR: Job 3 FAILED\n");
@@ -257,7 +281,7 @@ public class Main {
 		/* End Job 4a */
 
 		/* Job 4b */
-		// K Factor accuracy ranker
+		// K Factor errorsquare ranker
 		// Input: Output from job 3d
 		// Output: KFactor errorSquare (ranked highest percent to lowest
 		// percent)
@@ -276,10 +300,10 @@ public class Main {
 		FileInputFormat.setInputPaths(jobFourB, new Path(jobThreeDOutputPath));
 		FileOutputFormat.setOutputPath(jobFourB, new Path(jobFourBOutputPath));
 		jobGroupFour.addJob(jobFourB, "KFactor Error Square Ranked");
-		/* End Job 4a */
+		/* End Job 4b */
 
 		/* Job 4c */
-		// K Factor accuracy ranker
+		// K Factor error ranker
 		// Input: Output from job 3e
 		// Output: KFactor error (ranked highest percent to lowest percent)
 		Configuration confFourC = new Configuration();
@@ -297,7 +321,28 @@ public class Main {
 		FileInputFormat.setInputPaths(jobFourC, new Path(jobThreeEOutputPath));
 		FileOutputFormat.setOutputPath(jobFourC, new Path(jobFourCOutputPath));
 		jobGroupFour.addJob(jobFourC, "KFactor Error Ranked");
-		/* End Job 4a */
+		/* End Job 4c */
+
+		/* Job 4d */
+		// K Factor true error ranker
+		// Input: Output from job 3f
+		// Output: KFactor true error (ranked highest percent to lowest percent)
+		Configuration confFourD = new Configuration();
+		Job jobFourD = Job.getInstance(confFourD);
+		jobFourD.setJarByClass(Main.class);
+		jobFourD.setMapperClass(KFactorAccuracyRankMapper.class);
+		jobFourD.setReducerClass(KFactorAccuracyRankReducer.class);
+		jobFourD.setMapOutputKeyClass(Text.class);
+		jobFourD.setMapOutputValueClass(KFactorAccuracyWritable.class);
+		jobFourD.setOutputKeyClass(NullWritable.class);
+		jobFourD.setOutputValueClass(KFactorAccuracyWritable.class);
+		jobFourD.setInputFormatClass(TextInputFormat.class);
+		jobFourD.setOutputFormatClass(TextOutputFormat.class);
+
+		FileInputFormat.setInputPaths(jobFourD, new Path(jobThreeFOutputPath));
+		FileOutputFormat.setOutputPath(jobFourD, new Path(jobFourDOutputPath));
+		jobGroupFour.addJob(jobFourD, "KFactor True Error Ranked");
+		/* End Job 4d */
 
 		jobGroupFour.runAndWait();
 		if (!jobGroupFour.isSuccessful()) {
