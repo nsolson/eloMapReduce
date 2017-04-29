@@ -129,6 +129,12 @@ public class GameEloMapper extends Mapper<LongWritable, Text, KFactorDateWritabl
 					game.getYear(), game.getMonth(), game.getDay());
 			context.write(kFactorKey, game);
 
+		} else if (Constants.FINAL_RUN) {
+
+			KFactorDateWritable kFactorKey = new KFactorDateWritable(Constants.FINAL_K_FACTOR, game.getSeasonYear(),
+					game.getYear(), game.getMonth(), game.getDay());
+			context.write(kFactorKey, game);
+
 		} else {
 
 			for (int kFactor = Constants.MIN_K_FACTOR; kFactor <= Constants.MAX_K_FACTOR; kFactor += Constants.K_FACTOR_STEP) {

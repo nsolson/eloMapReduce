@@ -19,6 +19,7 @@ public class Main {
 
 	private static final String JOB_ONE_OUT_DIR = "GamePlayerPerLine";
 	private static final String JOB_TWO_OUT_DIR = "BeforeAfterElo";
+
 	private static final String JOB_THREE_A_OUT_DIR = "BestPlayers";
 	private static final String JOB_THREE_B_OUT_DIR = "BestTeams";
 	private static final String JOB_THREE_C_OUT_DIR = "KFactorPercent";
@@ -31,18 +32,34 @@ public class Main {
 	private static final String JOB_FOUR_C_OUT_DIR = "KFactorErrorRanked";
 	private static final String JOB_FOUR_D_OUT_DIR = "KFactorTrueErrorRanked";
 
-	private static final int NUM_JOBS = 4;
+	private static final String JOB_FIVE_OUT_DIR = "MostRecentElo";
+
+	private static final String JOB_SIX_OUT_DIR = "Recommendations";
+
+	private static final String JOB_SEVEN_OUT_DIR = "RecommendationsRanked";
+
+	private static final int NUM_JOBS;
+
+	static {
+
+		if (Constants.FINAL_RUN) {
+			NUM_JOBS = 7;
+		} else {
+			NUM_JOBS = 4;
+		}
+	}
 
 	public static void main(String[] args) throws IOException, ClassNotFoundException, InterruptedException {
 
-		if (args.length != 4) {
-			System.err.println("Usage: <jar file> <games file> <players file> <tmp_dir> <output dir>");
+		if (args.length != 5) {
+			System.err.println("Usage: <jar file> <games file> <players file> <salary file> <tmp_dir> <output dir>");
 			System.exit(-1);
 		}
 		String gamesFile = args[0];
 		String playersFile = args[1];
-		String tmpDir = args[2];
-		String outDir = args[3];
+		String salaryFile = args[2];
+		String tmpDir = args[3];
+		String outDir = args[4];
 
 		String jobOneOutputPath = tmpDir + File.separator + JOB_ONE_OUT_DIR;
 		String jobTwoOutputPath = tmpDir + File.separator + JOB_TWO_OUT_DIR;
@@ -56,6 +73,9 @@ public class Main {
 		String jobFourBOutputPath = tmpDir + File.separator + JOB_FOUR_B_OUT_DIR;
 		String jobFourCOutputPath = tmpDir + File.separator + JOB_FOUR_C_OUT_DIR;
 		String jobFourDOutputPath = tmpDir + File.separator + JOB_FOUR_D_OUT_DIR;
+		String jobFiveOutputPath = tmpDir + File.separator + JOB_FIVE_OUT_DIR;
+		String jobSixOutputPath = tmpDir + File.separator + JOB_SIX_OUT_DIR;
+		String jobSevenOutputPath = outDir + File.separator + JOB_SEVEN_OUT_DIR;
 
 		/* Job 1 */
 		// Input: GamesFile + PlayersFile
@@ -117,7 +137,7 @@ public class Main {
 		JobGroup jobGroupThree = new JobGroup("Job 3");
 
 		/* Job 3a and 3b are for testing */
-		if (Constants.TEST_RUN) {
+		if (Constants.TEST_RUN || Constants.FINAL_RUN) {
 
 			/* Job 3a */
 			// Best Players
@@ -234,7 +254,7 @@ public class Main {
 		Job jobThreeF = Job.getInstance(confThreeF);
 		jobThreeF.setJarByClass(Main.class);
 		jobThreeF.setMapperClass(KFactorTrueErrorMapper.class);
-		jobThreeF.setReducerClass(KFactorErrorReducer.class);
+		jobThreeF.setReducerClass(KFactorTrueErrorReducer.class);
 		jobThreeF.setMapOutputKeyClass(Text.class);
 		jobThreeF.setMapOutputValueClass(DoubleWritable.class);
 		jobThreeF.setOutputKeyClass(Text.class);
@@ -351,6 +371,93 @@ public class Main {
 		}
 		System.out.println("\n***** Job 4/" + NUM_JOBS + " Finished *****\n");
 		/* End Job 4 */
+
+		if (Constants.FINAL_RUN) {
+
+			/* Job 5 */
+			// Most recent elo mapper
+			// Input: Output from job 2
+			// Output: players with their most recent elo
+			System.out.println("\n***** Job 5/" + NUM_JOBS + " Starting *****\n");
+			Configuration confFive = new Configuration();
+			Job jobFive = Job.getInstance(confFive);
+			jobFive.setJarByClass(Main.class);
+			jobFive.setMapperClass(MostRecentEloMapper.class);
+			jobFive.setPartitionerClass(KFactorPartitioner.class);
+			jobFive.setGroupingComparatorClass(KFactorGroupComparator.class);
+			jobFive.setReducerClass(MostRecentEloReducer.class);
+			jobFive.setMapOutputKeyClass(KFactorDateWritable.class);
+			jobFive.setMapOutputValueClass(Text.class);
+			jobFive.setOutputKeyClass(NullWritable.class);
+			jobFive.setOutputValueClass(Text.class);
+			jobFive.setInputFormatClass(TextInputFormat.class);
+			jobFive.setOutputFormatClass(TextOutputFormat.class);
+
+			FileInputFormat.setInputPaths(jobFive, new Path(jobTwoOutputPath));
+			FileOutputFormat.setOutputPath(jobFive, new Path(jobFiveOutputPath));
+
+			if (!jobFive.waitForCompletion(true)) {
+				System.err.println("\nERROR: Job 5 FAILED\n");
+				System.exit(5);
+			}
+			System.out.println("\n***** Job 5/" + NUM_JOBS + " Finished *****\n");
+			/* End Job 5 */
+
+			/* Job 6 */
+			// Recommendations
+			// Input: Output from job 5 and salary file
+			// Output: Recommendations
+			System.out.println("\n***** Job 6/" + NUM_JOBS + " Starting *****\n");
+			Configuration confSix = new Configuration();
+			Job jobSix = Job.getInstance(confSix);
+			jobSix.setJarByClass(Main.class);
+			jobSix.setMapperClass(RecommendationMapper.class);
+			jobSix.setReducerClass(RecommendationReducer.class);
+			jobSix.setMapOutputKeyClass(Text.class);
+			jobSix.setMapOutputValueClass(Text.class);
+			jobSix.setOutputKeyClass(PlayerEloSalaryWritable.class);
+			jobSix.setOutputValueClass(NullWritable.class);
+			jobSix.setInputFormatClass(TextInputFormat.class);
+			jobSix.setOutputFormatClass(TextOutputFormat.class);
+
+			FileInputFormat.setInputPaths(jobSix, new Path(jobFiveOutputPath), new Path(salaryFile));
+			FileOutputFormat.setOutputPath(jobSix, new Path(jobSixOutputPath));
+
+			if (!jobSix.waitForCompletion(true)) {
+				System.err.println("\nERROR: Job 6 FAILED\n");
+				System.exit(6);
+			}
+			System.out.println("\n***** Job 6/" + NUM_JOBS + " Finished *****\n");
+			/* End Job 6 */
+
+			/* Job 7 */
+			// Ranked recommendations
+			// Input: Output from job 6
+			// Output: Recommendations sorted
+			System.out.println("\n***** Job 7 /" + NUM_JOBS + " Starting *****\n");
+			Configuration confSeven = new Configuration();
+			Job jobSeven = Job.getInstance(confSeven);
+			jobSeven.setJarByClass(Main.class);
+			jobSeven.setMapperClass(RecommendationRankMapper.class);
+			jobSeven.setReducerClass(RecommendationRankReducer.class);
+			jobSeven.setMapOutputKeyClass(Text.class);
+			jobSeven.setMapOutputValueClass(Text.class);
+			jobSeven.setOutputKeyClass(NullWritable.class);
+			jobSeven.setOutputValueClass(Text.class);
+			jobSeven.setInputFormatClass(TextInputFormat.class);
+			jobSeven.setOutputFormatClass(TextOutputFormat.class);
+
+			FileInputFormat.setInputPaths(jobSeven, new Path(jobSixOutputPath));
+			FileOutputFormat.setOutputPath(jobSeven, new Path(jobSevenOutputPath));
+
+			if (!jobSeven.waitForCompletion(true)) {
+				System.err.println("\nERROR: Job 7 FAILED\n");
+				System.exit(7);
+			}
+			System.out.println("\n***** Job 7/" + NUM_JOBS + " Finished *****\n");
+			/* End Job 7 */
+
+		}
 
 		System.exit(0);
 

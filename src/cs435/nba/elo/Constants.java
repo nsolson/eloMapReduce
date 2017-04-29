@@ -14,6 +14,11 @@ public class Constants {
 	public static boolean TEST_RUN = false;
 
 	/**
+	 * Whether this is the final run or not
+	 */
+	public static boolean FINAL_RUN = true;
+
+	/**
 	 * Represents an invalid ID for all things that have IDs. Mainly used where
 	 * default constructors are required.
 	 */
@@ -48,15 +53,20 @@ public class Constants {
 	/**
 	 * The minimum K-Factor to test
 	 */
-	public static final int MIN_K_FACTOR = 4;
+	public static final int MIN_K_FACTOR = 8;
 
 	/**
 	 * The max K-Factor to test
 	 */
-	public static final int MAX_K_FACTOR = 100;
+	public static final int MAX_K_FACTOR = 36;
 
 	/**
 	 * The K-Factor step size
 	 */
-	public static final int K_FACTOR_STEP = 4;
+	public static final int K_FACTOR_STEP = 1;
+
+	/**
+	 * The final K-Factor
+	 */
+	public static final int FINAL_K_FACTOR = 17;
 }

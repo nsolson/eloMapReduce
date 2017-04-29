@@ -60,19 +60,18 @@ public class KFactorTrueErrorMapper extends Mapper<LongWritable, Text, Text, Dou
 			if (homeTeamPoints > awayTeamPoints) {
 
 				// Correctly predicted
-				// Our error is 0 (we got it right)
-				context.write(new Text(kFactor), new DoubleWritable(0));
+				// Expected value home = 1
+				// Expected value away = 0
+				double error = Math.abs(1 - eHome) + Math.abs(0 - eAway);
+				context.write(new Text(kFactor), new DoubleWritable(Math.pow(error, 2)));
 
 			} else {
 
 				// Incorrect prediction
-				// This means we should have predicted the other team higher (or
-				// at minimum 50/50)
-				// The error is what it takes to get them to 50/50 or the
-				// absolute difference between the two
-				// (e.g., if predicted 0.4 & 0.6, the abs dif is 0.2 which is
-				// what it takes to get them both to 0.5)
-				context.write(new Text(kFactor), new DoubleWritable(Math.abs(eHome - eAway)));
+				// Expected value home = 0
+				// Expected value away = 1
+				double error = Math.abs(0 - eHome) + Math.abs(1 - eAway);
+				context.write(new Text(kFactor), new DoubleWritable(Math.pow(error, 2)));
 			}
 
 		} else if (homeTeamStartElo < awayTeamStartElo) {
@@ -81,23 +80,23 @@ public class KFactorTrueErrorMapper extends Mapper<LongWritable, Text, Text, Dou
 			if (awayTeamPoints > homeTeamPoints) {
 
 				// Correctly predicted
-				// Our error is 0 (we got it right)
-				context.write(new Text(kFactor), new DoubleWritable(0));
+				// Expected value away = 1
+				// Expected value home = 0
+				double error = Math.abs(1 - eAway) + Math.abs(0 - eHome);
+				context.write(new Text(kFactor), new DoubleWritable(Math.pow(error, 2)));
 
 			} else {
 
 				// Incorrect prediction
-				// This means we should have predicted the other team higher (or
-				// at minimum 50/50)
-				// The error is what it takes to get them to 50/50 or the
-				// absolute difference between the two
-				// (e.g., if predicted 0.4 & 0.6, the abs dif is 0.2 which is
-				// what it takes to get them both to 0.5)
-				context.write(new Text(kFactor), new DoubleWritable(Math.abs(eAway - eHome)));
+				// Expected value away = 0
+				// Expected value home = 1
+				double error = Math.abs(0 - eAway) + Math.abs(1 - eHome);
+				context.write(new Text(kFactor), new DoubleWritable(Math.pow(error, 2)));
 			}
 
 		}
 		// else we predicted they would tie, throw it out (should only happen
 		// for first games)
+
 	}
 }
